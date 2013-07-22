@@ -823,38 +823,6 @@ spGPP.prediction<-function(nBurn, pred.data, pred.coords,
       fore.x<-Formula.matrix(call.f,data=fore.data)[[2]]
     #
     #
-#      #
-#        if (is.null(fore.X)){
-#           if(dimnames(posteriors$X)[[2]][1]=="(Intercept)"){
-#           fore.x <- matrix(rep(1,nsite*r*K))
-#           }
-#           else{ 
-#           stop("\n Error: need to specify the forecast covariates \n ...")
-#           }
-#        }
-#      #
-#        if (!is.null(fore.X)){
-#        if (!is.matrix(fore.X)) {
-#           stop("Error: fore.X must be a MATRIX.")
-#        }
-#      #
-#        if(dimnames(posteriors$X)[[2]][1]=="(Intercept)"){
-#           Intercept <- rep(1,dim(fore.X)[1])
-#           fore.x <- cbind(Intercept,fore.X)
-#        } 
-#      #
-#        if(dimnames(posteriors$X)[[2]][1] != "(Intercept)"){
-#           fore.x <- fore.X
-#        } 
-#      #
-#        }
-#        fore.X <- NULL
-#      #
-#      if(length(c(fore.x)) != (nsite*r*K*p)){
-#           stop("Error: number of observations in fore.X mismatches with the fore.coords.")
-#      }  	
-#      #
-      ###
       #
            dm <- posteriors$Distance.matrix.knots
       #
@@ -920,11 +888,18 @@ spGPP.prediction<-function(nBurn, pred.data, pred.coords,
           }
           # 
       #output$n.fore.sites <- nsite
+      #output$foreStep <- K
       output$knots.coords <- knots.coords
       output$fore.coords <- fore.coords
       output$distance.method<-posteriors$distance.method  
       output$cov.fnc<-posteriors$cov.fnc  
       output$scale.transform <- posteriors$scale.transform
+      output$obsData<-matrix(posteriors$Y,r*T,n)  
+      output$fittedData<-matrix(posteriors$fitted[,1],r*T,n) 
+      if(posteriors$scale.transform=="SQRT"){output$fittedData<-output$fittedData^2}
+      else if(posteriors$scale.transform=="LOG"){output$fittedData<-exp(output$fittedData)}
+      else {output$fittedData<-output$fittedData}
+      output$residuals<-matrix(c(output$obsData)-c(output$fittedData),r*T,n)
       #
       if(Summary == TRUE){
          if(itt < 40){

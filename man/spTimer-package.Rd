@@ -31,14 +31,17 @@ K.S. Bakar & S.K. Sahu \cr
 Maintainer: K.S. Bakar <shuvo.bakar@csiro.au>
 }
 \references{
-1. Sahu, S.K. & Bakar, K.S. (2013). Hierarchical Bayesian auto-regressive models for large space time data with applications to ozone concentration modelling. Applied Stochastic Models in Business and Industry, In Press.\cr
-2. Sahu, S.K., Gelfand, A.E., & Holland, D.M. (2007). High-Resolution Space-Time Ozone Modelling for Assessing Trends. Journal of the American Statistical Association, 102, 1221-1234.\cr
-3. Bakar, K.S. & Sahu, S.K. (2012). spTimer: Spatio-Temporal Bayesian Modelling Using R. URL: http://www.southampton.ac.uk/~sks/research/papers/spTimeRpaper.pdf \cr
-4. Bakar, K.S. (2012). Bayesian Analysis of Daily Maximum Ozone Levels. PhD Thesis, University of Southampton, Southampton, United Kingdom.
+
+ Bakar, K. S. and Sahu, S. K. (2013) spTimer: Spatio-Temporal Bayesian Modelling Using R. Technical Report, University of Southampton, UK. \cr
+ Sahu, S. K. and Bakar, K. S. (2012) A comparison of Bayesian Models for Daily Ozone Concentration Levels Statistical Methodology , 9, 144-157. \cr
+ Sahu, S. K. and Bakar, K. S. (2012) Hierarchical Bayesian auto-regressive models for large space time data with applications to ozone concentration modelling. Applied Stochastic Models in Business and Industry, 28, 395-415. \cr
+ Sahu, S. K., Bakar, K. S. and Awang, N. (2013) Bayesian Forecasting Using Hierarchical Spatio-temporal Models with Applications to Ozone Levels in the Eastern United States. Technical Report, University of Southampton. \cr
+ Sahu, S.K., Gelfand, A.E., & Holland, D.M. (2007). High-Resolution Space-Time Ozone Modelling for Assessing Trends. Journal of the American Statistical Association, 102, 1221-1234.
+
 }
 \keyword{ package }
 \seealso{
-Packages 'spBayes'; 'maps'; 'MBA'; 'coda'; website: \code{http://www.r-project.org/}.
+Packages 'forecast'; 'spBayes'; 'maps'; 'MBA'; 'coda'; website: \code{http://www.r-project.org/}.
 }
 %\examples{
 %~~ simple examples of the most important functions ~~

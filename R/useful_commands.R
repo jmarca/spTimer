@@ -298,7 +298,7 @@ spT.MCMC.plot<-function(x, nBurn=0, ACF="FALSE", PARTIAL.acf="FALSE")
   }
   #
   ##
-   x11()
+   dev.new()
    for(i in 1:dim(para)[[1]]){
     MCMC.plot.obj(para[i,],name=c(dimnames(para)[[1]][i]),ACF=ACF,PARTIAL.acf=PARTIAL.acf)
     par(ask=TRUE)
@@ -1018,13 +1018,13 @@ spT.validation <- function(z, zhat)
  cat("##\n Mean Squared Error (MSE) \n Root Mean Squared Error (RMSE) \n Mean Absolute Error (MAE) \n Mean Absolute Percentage Error (MAPE) \n Bias (BIAS) \n Relative Bias (rBIAS) \n Relative Mean Separation (rMSEP)\n##\n") 
  ##
    out<-NULL
-   out$VMSE<-VMSE(z, zhat)
-   out$RMSE<-RMSE(z, zhat)
-   out$MAE<-MAE(z, zhat)
-   #out$MAPE<-MAPE(z, zhat)
-   #out$BIAS<-BIAS(z, zhat)
-   out$rBIAS<-rBIAS(z, zhat)
-   out$rMSEP<-rMSEP(z, zhat)
+   out$MSE<-VMSE(c(z), c(zhat))
+   out$RMSE<-RMSE(c(z), c(zhat))
+   out$MAE<-MAE(c(z), c(zhat))
+   out$MAPE<-MAPE(c(z), c(zhat))
+   out$BIAS<-BIAS(c(z), c(zhat))
+   out$rBIAS<-rBIAS(c(z), c(zhat))
+   out$rMSEP<-rMSEP(c(z), c(zhat))
    unlist(out)
 }
 ##
@@ -1045,7 +1045,7 @@ MCMC.plot.obj<-function(post_val, nItr, nBurn=0,
       }
       if(ACF==FALSE & PARTIAL.acf==FALSE){
         #windows()
-        #x11()
+        #dev.new()
         par(mfrow=c(1,2))
         #plot(nBurn:nItr, x[nBurn:nItr], xlab = "Iterations", 
         #   ylab = paste("Values of  (", name, ")", sep=''), type = "l",
@@ -1060,7 +1060,7 @@ MCMC.plot.obj<-function(post_val, nItr, nBurn=0,
      }	
      else if(ACF==TRUE & PARTIAL.acf==TRUE){
       #windows()
-      #x11() 
+      #dev.new() 
       par(mfrow=c(1,4))
       plot(nBurn:nItr, x[nBurn:nItr], xlab = "Iterations", 
         ylab = paste("Values of  (", name, ")", sep=''), type = "l", 
@@ -1072,7 +1072,7 @@ MCMC.plot.obj<-function(post_val, nItr, nBurn=0,
       pacf(x[nBurn:nItr],main='Partial ACF plot',col="red")
      }
      else if(ACF=="TRUE" & PARTIAL.acf=="FALSE"){
-      #x11() 
+      #dev.new() 
       par(mfrow=c(1,3))
       plot(nBurn:nItr, x[nBurn:nItr], xlab = "Iterations", 
         ylab = paste("Values of  (", name, ")", sep=''), type = "l", 
@@ -1191,20 +1191,23 @@ model.matrix.spT<-function(object, ...){
 ##
 ## use of summary
 ##
-summary.spT<-function(object, pack="spTimer", ...){
-   if(pack=="coda"){
+summary.spT<-function(object, digits=4, package="spTimer", ...){
+   if(package=="coda"){
     if(object$combined.fit.pred==TRUE){
       stop("\n# Error: coda package is not useful for output with combined fit and predict \n")
     }
     else{
-     cat("\n#### MCMC summary statistics using coda package ####\n")
+     cat("\n#### MCMC summary statistics using coda package ####\n\n")
      tmp<-as.mcmc(object)
-     summary(tmp)
+     summary(tmp, ...)
     }
    }
    else{
+   print(object)
+   cat("-----------------------------------------------------"); cat('\n');
    cat("Parameters:\n")
-   print(object$parameter); #cat("\n");
+   print(round(object$parameter,digits=digits)); #cat("\n");
+   cat("-----------------------------------------------------"); cat('\n');
    }
 }
 ##
@@ -1222,7 +1225,7 @@ plot.spT<-function(x, residuals=FALSE, ...){
      }
      else{
       tmp<-as.mcmc(x)
-      plot(tmp)
+      plot(tmp, ...)
      } 
    }
    else{
@@ -1234,8 +1237,8 @@ plot.spT<-function(x, residuals=FALSE, ...){
 ##
 ## use of coefficients
 ##
-coef.spT<-function(object, ...){
-   t(object$parameter)[1,]
+coef.spT<-function(object, digits=4, ...){
+   round(t(object$parameter)[1,],digits=digits)
 }
 ##
 ## use of residuals
@@ -1274,9 +1277,48 @@ terms.spT<-function(x, ...){
   terms(x$call)
 }
 ##
+## print
+##
+print.spT<-function(x, ...) {
+    cat("-----------------------------------------------------"); cat('\n');
+    cat("Model: "); cat(x$model); cat('\n');
+    cat("Call: "); print(x$call); #cat('\n')
+    cat("Iterations: "); cat(x$iterations); cat("\n")
+    cat("nBurn: "); cat(x$nBurn); cat("\n")
+    cat("Acceptance rate for phi (%): "); cat(x$accept); cat("\n")
+    cat("-----------------------------------------------------"); cat('\n');
+    #cat("PMCC: "); cat("\n");
+    print(x$PMCC); 
+    cat("-----------------------------------------------------"); cat('\n');
+    #cat("Parameters:\n")
+    #print(x$parameter); #cat("\n");
+    #cat("-----------------------------------------------------"); cat('\n');
+    cat("Computation time: "); cat(x$computation.time); cat("\n")
+}
+##
+## use of package forecast
+##
+as.forecast.object<-function(object, site=1, level=c(80,95), ...){
+   # object is the output from the predict.spT for forecast
+   x<-NULL
+   x$model<-list(Name = object$model)
+   x$method<-paste(object$model,"spatio-temporal model, site:",site)
+   x$x<-ts(object$obsData)[,site]
+   x$fitted<-ts(object$fittedData)[,site]
+   x$residuals<-ts(object$residuals)[,site]
+   x$mean<-ts(object$Mean,start=c(dim(object$obsData)[[1]]+1,1))[,site]
+   x$level<-level
+   x$upper<-array(apply(object$fore.samples,1,quantile,probs=c(level/100)),dim=c(length(level),dim(object$Mean)[[1]],dim(object$Mean)[[2]]))
+   x$upper<-t(x$upper[,,site])
+   x$lower<-array(apply(object$fore.samples,1,quantile,probs=c(1-level/100)),dim=c(length(level),dim(object$Mean)[[1]],dim(object$Mean)[[2]]))
+   x$lower<-t(x$lower[,,site])
+   cat(paste("Forecast for site:",site),"\n")
+   class(x)<-"forecast"
+   x
+}
+##
 ## use of display
 ##
-
 
 ##
 ## use of offset

@@ -13,10 +13,10 @@ scale.transform, spatial.decay, annual.aggrn)
 }
 \arguments{
 \item{formula}{The symnbolic description of the model equation of the regression part of the space-time model.}
-\item{data}{An optional data frame containing the variables in the model. If omitted, the variables are taken from environment(formula), typically the environment from which spT.Gibbs is called. The data should be ordered first by the time and then by the sites specified by the \code{coords} below.}
+\item{data}{An optional data frame containing the variables in the model. If omitted, the variables are taken from environment(formula), typically the environment from which spT.Gibbs is called. The data should be ordered first by the time and then by the sites specified by the \code{coords} below. One can also supply coordinates through this argument, where coordinate names should be "Latitude"/"Longitude" or "xcoords"/"ycoords".}
 \item{model}{The spatio-temporal models to be fitted, current input: "GP", "AR", and "GPP".}
 \item{time.data}{Defining the segments of the time-series set up using the function \code{\link{spT.time}}.}
-\item{coords}{The n by 2 matrix defining the locations (e.g., longitude/easting, latitude/northing) of the fitting sites, where n is the number of fitting sites.}
+\item{coords}{The n by 2 matrix defining the locations (e.g., longitude/easting, latitude/northing) of the fitting sites, where n is the number of fitting sites. One can also supply coordinates through the argument data, where coordinate names should be "Latitude"/"Longitude" or "xcoords"/"ycoords".}
 \item{knots.coords}{The locations of the knots in similar format to coords above, only required if \code{model="GPP"}.}
 \item{newcoords}{The locations of the prediction sites in similar format to coords above, only required if fit and predictions are done simultaneously.}
 \item{newdata}{The covariate values at the prediction sites specified by \code{pred.coords}. This should have same space-time structure as the original data frame.}
@@ -40,12 +40,12 @@ scale.transform, spatial.decay, annual.aggrn)
 \item{accept}{The acceptance rate for the \eqn{\phi} parameter if the "MH" method of sampling is chosen.}
 \item{phip}{MCMC samples for the parameter \eqn{\phi}.}
 \item{nup}{MCMC samples for the parameter \eqn{\nu}. Only available if "matern" covariance function is used.}
-\item{sig2ep}{MCMC samples for the parameter \eqn{\sigma^2_\epsilon}.}
+\item{sig2eps}{MCMC samples for the parameter \eqn{\sigma^2_\epsilon}.}
 \item{sig2etap}{MCMC samples for the parameter \eqn{\sigma^2_\eta}.}
 \item{betap}{MCMC samples for the parameter \eqn{\beta}.}
 \item{op}{MCMC samples for the true observations.}
 \item{fitted}{MCMC summary (mean and sd) for the fitted values.}
-\item{sig2ep}{MCMC samples for the parameter \eqn{\sigma^2_\epsilon}.}
+%\item{sig2eps}{MCMC samples for the parameter \eqn{\sigma^2_\epsilon}.}
 \item{tol.dist}{Minimum tolerance distance limit between the locations.}
 \item{distance.method}{Name of the distance calculation method.}
 \item{cov.fnc}{Name of the covariance function used in model fitting.}
@@ -103,10 +103,19 @@ OutGPP_Annual_4th_Highest_Prediction.txt: (nItr x (predsites*r)) matrix. \cr
 
 }
 }
+\references{
+
+ Bakar, K. S. and Sahu, S. K. (2013) spTimer: Spatio-Temporal Bayesian Modelling Using R. Technical Report, University of Southampton, UK. \cr
+ Sahu, S. K. and Bakar, K. S. (2012) A comparison of Bayesian Models for Daily Ozone Concentration Levels Statistical Methodology , 9, 144-157. \cr
+ Sahu, S. K. and Bakar, K. S. (2012) Hierarchical Bayesian auto-regressive models for large space time data with applications to ozone concentration modelling. Applied Stochastic Models in Business and Industry, 28, 395-415. \cr
+ Sahu, S. K., Bakar, K. S. and Awang, N. (2013) Bayesian Forecasting Using Hierarchical Spatio-temporal Models with Applications to Ozone Levels in the Eastern United States. Technical Report, University of Southampton. 
+
+}
+
 %\note{
 %}
 \seealso{
-\code{\link{spT.priors}, \link{spT.initials}, \link{spT.geodist}, \link{dist}, \link{summary.spT}, \link{plot.spT}, \link{predict.spT}, \link{spT.prediction}, \link{spT.forecast}}.
+\code{\link{spT.priors}, \link{spT.initials}, \link{spT.geodist}, \link{dist}, \link{summary.spT}, \link{plot.spT}, \link{predict.spT}}.
 }
 \examples{
 \dontrun{
@@ -162,7 +171,7 @@ nItr<-5000
 # MCMC via Gibbs
 set.seed(11)
 post.gp <- spT.Gibbs(formula=o8hrmax ~ cMAXTMP+WDSP+RH, 
-         data=fit.dat, model="GP", time.data=time.data, 
+         data=DataFit, model="GP", time.data=time.data, 
          coords=coords, priors=priors, initials=initials, 
          nItr=nItr, nBurn=0, report=nItr, 
          tol.dist=2, distance.method="geodetic:km", 
@@ -257,7 +266,7 @@ nItr<-5000
 # MCMC via Gibbs
 set.seed(11)
 post.ar <- spT.Gibbs(formula=o8hrmax~cMAXTMP+WDSP+RH, 
-         data=fit.dat, model="AR", time.data=time.data, 
+         data=DataFit, model="AR", time.data=time.data, 
          coords=coords, priors=priors, initials=initials, 
          nItr=nItr, nBurn=0, report=nItr, 
          tol.dist=2, distance.method="geodetic:km", 
@@ -346,8 +355,8 @@ nItr<-5000
 # MCMC via Gibbs
 set.seed(11)
 post.gpp <- spT.Gibbs(formula=o8hrmax~cMAXTMP+WDSP+RH, 
-         data=fit.dat, model="GPP", time.data=time.data, 
-         coords=coords, knots.coords=knots.coords,
+         data=DataFit, model="GPP", time.data=time.data, 
+         coords=coords, knots.coords=knots,
          priors=priors, initials=initials, 
          nItr=nItr, nBurn=0, report=nItr, 
          tol.dist=2, distance.method="geodetic:km", 
@@ -373,7 +382,7 @@ data(DataValPred)
 # Define the coordinates
 coords<-as.matrix(unique(cbind(DataFit[,2:3])))
 pred.coords<-as.matrix(unique(cbind(DataValPred[,2:3])))
-knots.coords<-spT.grid.coords(Longitude=c(max(coords[,1]),
+knots<-spT.grid.coords(Longitude=c(max(coords[,1]),
               min(coords[,1])),Latitude=c(max(coords[,2]),
               min(coords[,2])), by=c(4,4))
 
@@ -381,7 +390,7 @@ knots.coords<-spT.grid.coords(Longitude=c(max(coords[,1]),
 # from C routine to avoide large data problem in R
 set.seed(11)
 post.gpp.fitpred <- spT.Gibbs(formula=o8hrmax ~cMAXTMP+WDSP+RH,   
-         data=DataFit, model="GP", coords=coords, knots.coords=knots.coords,
+         data=DataFit, model="GP", coords=coords, knots.coords=knots,
          newcoords=pred.coords, newdata=DataValPred,
          scale.transform="SQRT")
 print(post.gpp.fitpred)

@@ -719,9 +719,16 @@ pred.samples<-log(pred.samples.ar$pred.samples[,])
           # 
       out<-NULL
       # output$n.fore.sites <- nsite
+      #output$foreStep <- K
       output$fore.coords <- fore.coords
       output$distance.method<-posteriors$distance.method  
       output$cov.fnc<-posteriors$cov.fnc  
+      output$obsData<-matrix(posteriors$Y,r*T,n)  
+      output$fittedData<-matrix(posteriors$fitted[,1],r*T,n) 
+      if(posteriors$scale.transform=="SQRT"){output$fittedData<-output$fittedData^2}
+      else if(posteriors$scale.transform=="LOG"){output$fittedData<-exp(output$fittedData)}
+      else {output$fittedData<-output$fittedData}
+      output$residuals<-matrix(c(output$obsData)-c(output$fittedData),r*T,n)
       #
       if(Summary == TRUE){
          if(itt < 40){

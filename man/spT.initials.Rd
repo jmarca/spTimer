@@ -23,7 +23,7 @@ spT.initials(model, sig2eps=0.01, sig2eta=NULL,
 Initial values are automatically given if the user does not provide these. 
 }
 \seealso{
-\code{\link{spT.Gibbs}, \link{spT.prediction}, \link{spT.forecast}, \link{spT.priors}}.
+\code{\link{spT.Gibbs}, \link{spT.priors}}.
 }
 \examples{
 \dontrun{

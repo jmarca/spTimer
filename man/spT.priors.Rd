@@ -20,7 +20,7 @@ If no prior information are given (assigned as NULL), then it use flat prior val
 \code{Gam} and \code{Nor} refers to Gamma and Normal distributions respectively.
 }
 \seealso{
-\code{\link{spT.Gibbs}, \link{predict.spT}, \link{spT.prediction}, \link{spT.forecast}, \link{spT.initials}}.
+\code{\link{spT.Gibbs}, \link{predict.spT}, \link{spT.initials}}.
 }
 \examples{
 \dontrun{

@@ -948,7 +948,7 @@ void sq_rt(double *a, double *t, int p, double *det)
   u =  a[p+1]  - sqr(t[p] );
   if  ( u<v ) {
 //         printf("Exited from sqrt: Matrix not pd\n");
-         Rprintf("C - Error1: Exited from sqrt: Matrix is not positive definite \n");
+         //Rprintf("C - Error1: Exited from sqrt: Matrix is not positive definite \n");
          //;
          //exit(19);
    } else  t[p+1] = sqrt(u);
@@ -972,7 +972,7 @@ void sq_rt(double *a, double *t, int p, double *det)
       u = a[i*p+i] - sum;
          if ( u<v ) {
 //                    printf("Exited from sqrt: Matrix not PD\n");
-                    Rprintf("C - Error2: Failed to find determinant: Matrix not positive definite\n");
+                    //Rprintf("C - Error2: Failed to find determinant: Matrix not positive definite\n");
                     //;
                     //exit(19);
          } else  t[i*p+i] = sqrt(u);

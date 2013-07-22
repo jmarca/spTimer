@@ -45,7 +45,6 @@
 \alias{formula.spT}
 \alias{terms.spT}
 \alias{model.matrix.spT}
-\alias{NYgrid}
 %\alias{imputation.z}
 %\alias{spT.keep.morethan.dist}
 %\alias{summary.spT}

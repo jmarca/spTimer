@@ -9,7 +9,6 @@ This function is used to obtain spatial predictions in the unknown locations and
 \method{predict}{spT}(object, newdata, newcoords, foreStep=NULL, type="spatial", 
         nBurn, tol.dist, predAR=NULL, ...)
 
-## see also \code{\link{spT.prediction}} for spatial prediction and \code{\link{spT.forecast}} for temporal prediction or forecast
 }
 \arguments{
 \item{object}{Object of class inheriting from "spT".}
@@ -33,9 +32,18 @@ This function is used to obtain spatial predictions in the unknown locations and
 \item{computation.time}{The computation time.}
 \item{model}{The model method used for prediction.}
 \item{type}{"spatial" or "temporal".}
+\item{...}{Other values "obsData", "fittedData" and "residuals" are provided only for temporal prediction. This is to analyse the code{spTimer} forecast output using package \code{forecast} through function \code{\link{as.forecast.object}}.}
+}
+\references{
+
+ Bakar, K. S. and Sahu, S. K. (2013) spTimer: Spatio-Temporal Bayesian Modelling Using R. Technical Report, University of Southampton, UK. \cr
+ Sahu, S. K. and Bakar, K. S. (2012) A comparison of Bayesian Models for Daily Ozone Concentration Levels Statistical Methodology , 9, 144-157. \cr
+ Sahu, S. K. and Bakar, K. S. (2012) Hierarchical Bayesian auto-regressive models for large space time data with applications to ozone concentration modelling. Applied Stochastic Models in Business and Industry, 28, 395-415. \cr
+ Sahu, S. K., Bakar, K. S. and Awang, N. (2013) Bayesian Forecasting Using Hierarchical Spatio-temporal Models with Applications to Ozone Levels in the Eastern United States. Technical Report, University of Southampton. 
+
 }
 \seealso{
-\code{\link{spT.Gibbs}}, \code{\link{spT.prediction}}, \code{\link{spT.forecast}}.
+\code{\link{spT.Gibbs}, \link{as.forecast.object}}.
 }
 \examples{
 \dontrun{
@@ -86,6 +94,10 @@ names(fore.gp)
 # Forecast validations 
 spT.validation(DataValFore$o8hrmax,c(fore.gp$Mean)) 
 
+# Use of "forecast" class
+tmp<-as.forecast.object(fore.gp, site=1) # default for site 1
+plot(tmp)
+
 ##
 ## Temporal  prediction/forecast 
 ## 2. In the observed/fitted locations
@@ -107,6 +119,10 @@ names(fore.gp)
 
 # Forecast validations 
 spT.validation(DataFitFore$o8hrmax,c(fore.gp$Mean)) # 
+
+# Use of "forecast" class
+tmp<-as.forecast.object(fore.gp, site=5) # for site 5
+plot(tmp)
 
 ##
 ## Fit and spatially prediction simultaneously
@@ -181,6 +197,11 @@ names(fore.ar)
 # Forecast validations 
 spT.validation(DataValFore$o8hrmax,c(fore.ar$Mean)) 
 
+# Use of "forecast" class
+tmp<-as.forecast.object(fore.ar, site=1) # default for site 1
+plot(tmp)
+
+
 ##
 ## Temporal  prediction/forecast 
 ## 2. In the observed/fitted locations
@@ -202,6 +223,10 @@ names(fore.ar)
 
 # Forecast validations 
 spT.validation(DataFitFore$o8hrmax,c(fore.ar$Mean)) # 
+
+# Use of "forecast" class
+tmp<-as.forecast.object(fore.ar, site=1) # default for site 1
+plot(tmp)
 
 ##
 ## Fit and spatially prediction simultaneously
@@ -275,6 +300,10 @@ names(fore.gpp)
 # Forecast validations 
 spT.validation(DataValFore$o8hrmax,c(fore.gpp$Mean)) 
 
+# Use of "forecast" class
+tmp<-as.forecast.object(fore.gpp, site=1) # default for site 1
+plot(tmp)
+
 ##
 ## Temporal  prediction/forecast 
 ## 2. In the observed/fitted locations
@@ -296,6 +325,10 @@ names(fore.gpp)
 
 # Forecast validations 
 spT.validation(DataFitFore$o8hrmax,c(fore.gpp$Mean)) # 
+
+# Use of "forecast" class
+tmp<-as.forecast.object(fore.gpp, site=1) # default for site 1
+plot(tmp)
 
 ##
 ## Fit and spatially prediction simultaneously

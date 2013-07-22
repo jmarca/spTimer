@@ -333,23 +333,6 @@ spT.time<-function(t.series,segment=1)
 ##
 #spT.Gibbs<-function(formula, ...) UseMethod("spT")
 ##
-print.spT<-function(x, ...) {
-    cat("-----------------------------------------------------"); cat('\n');
-    cat("Model: "); cat(x$model); cat('\n');
-    cat("Call: "); print(x$call); #cat('\n')
-    cat("Iterations: "); cat(x$iterations); cat("\n")
-    cat("nBurn: "); cat(x$nBurn); cat("\n")
-    cat("Acceptance rate for phi (%): "); cat(x$accept); cat("\n")
-    cat("-----------------------------------------------------"); cat('\n');
-    #cat("PMCC: "); cat("\n");
-    print(x$PMCC); 
-    cat("-----------------------------------------------------"); cat('\n');
-    #cat("Parameters:\n")
-    #print(x$parameter); #cat("\n");
-    #cat("-----------------------------------------------------"); cat('\n');
-    cat("Computation time: "); cat(x$computation.time); cat("\n")
-}
-##
 spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
          time.data=NULL, coords, knots.coords, 
          newcoords=NULL, newdata=NULL, 
@@ -394,7 +377,8 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
      para<-spT.Summary.Stat(para)
      dimnames(para)[[1]][1:(1+p+3)]<-c(dimnames(x$X)[[2]],"rho","sig2eps","sig2eta", "phi")
      }
-     round(para,4)
+     #round(para,4)
+     para
      }
      else if(model == "GPP"){
         if(nItr <= nBurn){
@@ -420,7 +404,8 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
      para<-spT.Summary.Stat(para)
      dimnames(para)[[1]][1:(1+p+2+1)]<-c(dimnames(x$X)[[2]],"rho","sig2eps","sig2eta","phi")
      }
-     round(para,4)
+     #round(para,4)
+     para
      }
      else if(model == "GP"){
         if(nItr <= nBurn){
@@ -444,11 +429,28 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
      para<-spT.Summary.Stat(para)
      dimnames(para)[[1]]<-c(dimnames(x$X)[[2]],"sig2eps","sig2eta","phi")
      }
-     round(para,4)
+     #round(para,4)
+     para
      }
      else{
 
      }
+   }
+   # check coords: built-in the data
+   if(missing(coords) || is.null(coords)){
+     if(!missing(data)){
+       sstr <- names(data)
+       coords <- data[,sstr[sstr %in% c("Longitude","Latitude","xcoords","ycoords")]]
+       if(dim(coords)[[2]]==0){
+         stop("\n Error: need to specify the coords using argument coords or\n through the supplied dataset, see help in spT.Gibbs")
+       }
+       else if(dim(coords)[[2]]>2){
+         stop("\n Error: check the dataset for supplied coordinates. \n It contains more than two columns of coordinate information.")
+       }
+       else{ 
+         coords <- as.matrix(unique(coords))
+       }
+     } 
    }
    ##
    if(is.null(newcoords) | is.null(newdata)) {
@@ -586,7 +588,7 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
     out
    } 
    else {
-    stop("\n# Error: correctly define pred.coords and pred.X \n")
+    stop("\n# Error: correctly define newcoords and newdata \n")
    }
 }
 ##
@@ -720,7 +722,7 @@ predict.spT<-function(object, newdata=NULL, newcoords, foreStep=NULL, type="spat
           stop("Error: define newcoords.")
         }
      out<-spT.prediction(nBurn=nBurn, pred.data=newdata, pred.coords=newcoords,
-          posteriors=object, tol.dist=2, Summary=TRUE)
+          posteriors=object, tol.dist=tol.dist, Summary=TRUE)
      out$type<-"spatial"
      class(out)<-"spTpred" 
      out

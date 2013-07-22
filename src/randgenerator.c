@@ -192,7 +192,8 @@ void chol_for_multivariate(double *s, int *n, double *ltrg)
 
     for(j=0,sum=0.;j<k;j++) sum+=ltrg[k*nn+j]*ltrg[k*nn+j];
     if(s[k*nn+k]-sum<=0.)
-      { Rprintf("Error! Not posi-definite matrix!");
+      { // Rprintf("Error! NOT a posi-definite matrix!!! \n ");
+      //{ Rprintf("Error! NOT a posi-definite matrix!!! \n Check the covariance and/or use \n (1) DISCRETE sampling or (2) FIXED value \n for spatial decay parameter \n");
       //;
       //exit(-1);
       }

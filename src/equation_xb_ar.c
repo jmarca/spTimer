@@ -107,8 +107,6 @@ void JOINT_ar(int *n, int *T, int *r, int *rT, int *p, int *N,
      //exit(9);
    }   
 
-   o0_ar(n, r, T, rT, p, sig_eta, sig_l0, rho, mu_l, Sinv, XB, o, 
-   constant, O_l0);
    theta_ar(n, r, T, rT, p, prior_sig, Qeta, O_l0, X, o, constant, 
    thetap); 
    rhop[0] = thetap[0];
@@ -550,10 +548,17 @@ void theta_ar(int *n, int *r, int *T, int *rT, int *p, double *prior_sig,
      for(i=0; i<(p1+1)*(p1+1); i++){
      del[i] = del[i] + I[i]*(1.0/prior_sig[0]);
      }
+     //for(i=0; i<(p1+1); i++){
+     //chi[i] = chi[i] + prior_mu[0]/prior_sig[0];
+     //}
+
      free(I);
      MInv(del, del, p1n, det);
      MProd(chi, constant, p1n, del, p1n, mu);  // (p+1) x 1      
      mvrnormal(constant, mu, del, p1n, thetap);
+//     for(i=0; i<(p1+1); i++){
+//      thetap[i] = mu[i];
+//     }
 
 
      free(p1n);
@@ -780,7 +785,7 @@ void o0_ar(int *n, int *r, int *T, int *rT, int *p, double *sig_eta,
      nn = n1*n1;
      col = *constant;
      
-     double *del, *det, *o1, *XB1, *m, *out;
+     double *del, *det, *o1, *XB1, *m, *out, *I;
 
      del = (double *) malloc((size_t)((n1*n1)*sizeof(double)));
      det = (double *) malloc((size_t)((col)*sizeof(double)));
@@ -788,10 +793,14 @@ void o0_ar(int *n, int *r, int *T, int *rT, int *p, double *sig_eta,
      XB1 = (double *) malloc((size_t)((n1*col)*sizeof(double)));
      m = (double *) malloc((size_t)((n1*col)*sizeof(double)));
      out = (double *) malloc((size_t)((n1*col)*sizeof(double)));
+     I = (double *) malloc((size_t)((n1*n1)*sizeof(double)));
+
+     IdentityM(n, I);
                                         
      for(l=0; l<r1; l++){
        for(i=0; i<nn; i++){
            del[i] = Sinv[i]*(rho[0]*rho[0]/sig_eta[0]+1.0/sig_l0[l]);
+           del[i] = del[i] + I[i]*(1/10000);
        }
        MInv(del, del, n, det);
        
@@ -802,15 +811,15 @@ void o0_ar(int *n, int *r, int *T, int *rT, int *p, double *sig_eta,
        m[i]=(rho[0]*(o1[i]-XB1[i])*(1.0/sig_eta[0]) + 
            mu_l[l]/sig_l0[l])/(rho[0]*rho[0]/sig_eta[0]+1.0/sig_l0[l]);
        }
-       mvrnormal(constant, m, del, n, out);
+//       mvrnormal(constant, m, del, n, out);
 
        for(i=0; i<n1; i++){
-         o0post[i+l*n1]=out[i];
+         o0post[i+l*n1]=m[i]; //out[i];
        }
      }
      
      free(del); free(det); free(o1); free(XB1); 
-     free(m); free(out);
+     free(m); free(out); free(I);
      return;
 }     
      
@@ -843,25 +852,33 @@ void o_ar(int *n, int *r, int *T, int *rT, int *p, double *sig_e,
      XB2 = (double *) malloc((size_t)((row*col)*sizeof(double)));
 
     
-     double *zT, *zt, *o_2, *I, *o1;
+     double *zT, *zt, *o_2, *I, *o1, *II;
      zT = (double *) malloc((size_t)((row*col)*sizeof(double)));          
      zt = (double *) malloc((size_t)((row*col)*sizeof(double)));               
      o_2 = (double *) malloc((size_t)((row*col)*sizeof(double)));          
      I = (double *) malloc((size_t)((row*col)*sizeof(double)));          
      o1 = (double *) malloc((size_t)((row*col)*sizeof(double)));
-               
+     II = (double *) malloc((size_t)((nn)*sizeof(double)));
+
+
+     IdentityM(n, II);
+                    
 // for 1 < t < T, the delta part
          for(i=0; i < nn; i++) {
             de_tT[i] = ((1.0/sig_e[0]) + Q_eta[i] + rho[0]*rho[0]*Q_eta[i]);
+            de_tT[i] = de_tT[i] + II[i]*(1/10000);
          }    
          MInv(de_tT, d_tT, n, det1); 
 
 // for t = T, the delta part
          for(i=0; i < nn; i++) {
              de_T[i] = ((1.0/sig_e[0]) + Q_eta[i]);       
+             de_T[i] = de_T[i] + II[i]*(1/10000);
          }    
          MInv(de_T, delT, n, det2);
 
+         free(II);
+         
 // term 1
          for(i=0; i < nn; i++) {
 //             term1[i] = (sig_eta[0]/sig_e[0])* exp(-(d[i]*phi[0]));       
@@ -873,7 +890,8 @@ void o_ar(int *n, int *r, int *T, int *rT, int *p, double *sig_e,
          }    
          MProd(I, constant, n, term1, n, term2);
 //         MProd(I, constant, n, term1, n, opost);    // OK     
- 
+
+        free(I);   
 // LOOP
      for(l=0; l < r1; l++) {
 
@@ -922,7 +940,8 @@ void o_ar(int *n, int *r, int *T, int *rT, int *p, double *sig_e,
 
          } // End of loop year
          
-         
+       
+
        free(o_1); free(term1); free(de_tT); free(d_tT); 
        free(de_T); free(delT); free(det1); free(det2); free(mean1); free(zT); 
        free(zt); free(o_2); free(I); free(o1); free(XB1); free(XB2);

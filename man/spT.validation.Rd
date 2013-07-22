@@ -12,11 +12,11 @@ spT.validation(z, zhat)
 \item{zhat}{The predicted values (matrix or vector).}
 }
 \value{
-\item{VMSE}{Validation Mean Squared Error.}
+\item{MSE}{Mean Squared Error.}
 \item{RMSE}{Root Mean Squared Error.}
 \item{MAE}{Mean Absolute Error.}
-%\item{MAPE}{Mean Absolute Percentage Error.}
-%\item{BIAS}{Bias.}
+\item{MAPE}{Mean Absolute Percentage Error.}
+\item{BIAS}{Bias.}
 \item{rBIAS}{Relative Bias.}
 \item{rMSEP}{Relative Mean Separation.}
 }
