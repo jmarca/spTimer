@@ -1,0 +1,35 @@
+citHeader("To cite spTimer in publications use:")
+
+year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
+vers <- paste("R package version", meta$Version)
+
+citEntry(entry = "Article",
+  title        = "{spTimer}: Spatio-Temporal Bayesian Modeling Using {R}",
+  author       = personList(as.person("Khandoker Shuvo Bakar"),
+                                      as.person("Sujit K. Sahu")),
+  journal      = "Journal of Statistical Software",
+  year         = "2015",
+  volume       = "63",
+  number       = "15",
+  pages        = "1--32",
+  url          = "http://www.jstatsoft.org/v63/i15",
+
+  textVersion  =
+  paste("Bakar, K.S. and Sahu, S.K. (2014).",
+        "spTimer: Spatio-Temporal Bayesian Modeling Using R",
+        "Journal of Statistical Software, 63(15), 1-32.",
+        "URL: http://www.jstatsoft.org/v63/i15/ .")
+)
+
+citEntry(entry="Manual",
+  title = "spTimer: Spatio-Temporal Bayesian Modeling Using R",
+  author    = personList(as.person("Khandoker Shuvo Bakar"),
+                                      as.person("Sujit K. Sahu")),
+  year = year,
+  note = vers,
+     
+  textVersion =
+  paste("Khandoker Shuvo Bakar, Sujit K. Sahu (",year,
+           "). spTimer: Spatio-Temporal Bayesian Modeling Using R", vers, ".", sep="")
+)
+

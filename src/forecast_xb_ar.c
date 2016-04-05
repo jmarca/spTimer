@@ -17,18 +17,15 @@ void zlt_fore_ar_its_anysite(int *cov, int *its, int *K, int *nsite, int *n,
      double *foreX, double *betap, double *zpred_exist, double *wp, 
      int *constant, double *foreZ)
 {
-     int i, j, its1, n1, ns, r1, T1, K1, p1, col;
+     int i, j, its1, n1, ns, r1, rT1, K1, p1, col;
      its1 = *its;
      n1 =*n;
      ns =*nsite;
      r1 =*r;
-     T1 =*T;
+     rT1 =*rT;
      K1 =*K;
      p1 =*p;
      col =*constant;     
-
-//     unsigned iseed = 44;
-//     srand(iseed); 
 
      double *phi, *nu, *sig_e, *sig_eta, *rho, *beta, *z, *fZ, *mu, *w;
      phi = (double *) malloc((size_t)((col)*sizeof(double)));       
@@ -38,7 +35,7 @@ void zlt_fore_ar_its_anysite(int *cov, int *its, int *K, int *nsite, int *n,
 
      rho = (double *) malloc((size_t)((col)*sizeof(double)));       
      beta = (double *) malloc((size_t)((p1*col)*sizeof(double)));       
-     z = (double *) malloc((size_t)((ns*r1*T1*col)*sizeof(double)));       
+     z = (double *) malloc((size_t)((ns*rT1*col)*sizeof(double)));       
      fZ = (double *) malloc((size_t)((ns*r1*K1*col)*sizeof(double)));       
      mu = (double *) malloc((size_t)((col)*sizeof(double)));       
      w = (double *) malloc((size_t)((n1)*sizeof(double)));            
@@ -58,8 +55,8 @@ void zlt_fore_ar_its_anysite(int *cov, int *its, int *K, int *nsite, int *n,
      for(j=0; j<p1; j++){
         beta[j] = betap[j+i*p1];
      }
-     for(j=0; j<ns*r1*T1; j++){
-        z[j] = zpred_exist[j+i*ns*r1*T1];
+     for(j=0; j<ns*rT1; j++){
+        z[j] = zpred_exist[j+i*ns*rT1];
         mu[0] = z[j];
         mvrnormal(constant, mu, sig_e, constant, mu);
         z[j] = mu[0]; 
@@ -92,13 +89,12 @@ void zlt_fore_ar(int *cov, int *K, int *nsite, int *n, int *r, int *p,
      double *foreX, double *beta, double *z, double *w, 
      int *constant, double *foreZ)
 { 
-     int l, k, t, i, T1, K1, r1, n1, ns, nns, col;
-     T1 =*T;
+     int l, k, t, i, K1, r1, n1, ns, col;
      K1 =*K;
      r1 =*r;
      n1 =*n;
      ns =*nsite;
-     nns =n1*ns;
+//     nns =n1*ns;
      col =*constant;
 
 
@@ -109,64 +105,6 @@ void zlt_fore_ar(int *cov, int *K, int *nsite, int *n, int *r, int *p,
     S_eta12c = (double *) malloc((size_t)((n1*col)*sizeof(double)));
     det = (double *) malloc((size_t)((col)*sizeof(double))); 
 
-/*      
-      // exponential covariance
-      if(cov[0] == 1){
-        for(i = 0; i < (n1*n1); i++){
-          S_eta[i] = exp(-1.0*phi[0]*d[i]);
-        }
-        MInv(S_eta, Si_eta, n, det);
-        for(i=0; i < nns; i++){
-          S_eta12[i] = exp(-phi[0]*d12[i]);        
-        }
-      }
-      // gaussian covariance
-      if(cov[0] == 2){
-        for(i = 0; i < (n1*n1); i++){
-          S_eta[i] = exp(-1.0*phi[0]*phi[0]*d[i]*d[i]);
-        }
-        MInv(S_eta, Si_eta, n, det);
-        for(i=0; i < nns; i++){
-          S_eta12[i] = exp(-1.0*phi[0]*phi[0]*d12[i]*d12[i]);        
-        }
-      }
-      // spherical covariance
-      if(cov[0] == 3){
-        for(i = 0; i < (n1*n1); i++){
-         if(d[i] > 0 && d[i] <= 1.0/phi[0]){
-         S_eta[i] = 1.0-1.5*phi[0]*d[i]+0.5*(phi[0]*d[i])*(phi[0]*d[i])*(phi[0]*d[i]);
-         }
-         else if(d[i] >= 1.0/phi[0]){
-         S_eta[i] = 0.0;
-         }
-         else{
-         S_eta[i] = 1.0;        
-         }        
-        }
-        MInv(S_eta, Si_eta, n, det);
-        for(i=0; i < nns; i++){
-         if(d12[i] > 0 && d12[i] <= 1.0/phi[0]){
-         S_eta12[i] = 1.0-1.5*phi[0]*d12[i]+0.5*(phi[0]*d12[i])*(phi[0]*d12[i])*(phi[0]*d12[i]);
-         }
-         else if(d12[i] >= 1.0/phi[0]){
-         S_eta12[i] = 0.0;
-         }
-         else{
-         S_eta12[i] = 1.0;        
-         }        
-        }
-      }
-      // matern covariance, nu = 3/2
-      if(cov[0] == 4){
-        for(i = 0; i < (n1*n1); i++){
-          S_eta[i] = (1.0+phi[0]*d[i])*exp(-1.0*phi[0]*d[i]);
-        }
-        MInv(S_eta, Si_eta, n, det);
-        for(i=0; i < nns; i++){
-          S_eta12[i] = (1.0+phi[0]*d12[i])*exp(-1.0*phi[0]*d12[i]);        
-        }
-      }
-*/
 
     covF(cov, n, n, phi, nu, d, S_eta);
     MInv(S_eta, Si_eta, n, det);    
@@ -183,32 +121,21 @@ void zlt_fore_ar(int *cov, int *K, int *nsite, int *n, int *r, int *p,
      eps = (double *) malloc((size_t)((col)*sizeof(double)));       
      zfore = (double *) malloc((size_t)((ns*col)*sizeof(double)));       
 
+     int *T1; 
+     T1 = (int *) malloc((size_t)((r1)*sizeof(int)));
+     for(i=0; i<r1; i++){
+          T1[i] = T[i];
+     }
+
      MProd(beta, constant, p, foreX, nrK, XB);  // nsiterK x 1     
      for(l=0; l<r1; l++){
        for(k=0; k<1; k++){     
-         t = (T1-1);
-         extract_alt2(l, k, nsite, rK, K, XB, XB1); // nsite x 1
-         extract_alt2(l, t, nsite, rT, T, z, zT); // nsite x 1
+         t = (T1[l]-1);
+         extract_alt_uneqT(l, t, nsite, r, T, rT, z, zT);
+//         extract_alt2(l, t, nsite, rT, T, z, zT); // nsite x 1
          extract_alt2(l, k, nsite, rK, K, XB, XB1); // nsite x 1
          for(i=0; i<ns; i++){
-/*
-            if(ns == n1){
-            extn_12(i, n, S_eta,S_eta12c); // n x 1
-            xTay(S_eta12c, Si_eta, w, n, mu); // 1 x 1 for mean            
-            xTay(S_eta12c, Si_eta, S_eta12c, n, s21);            
-            if(s21[0] > 1.0){
-                s21[0] = 1.0-pow(1,-320);
-            }
-            if(s21[0] == 1.0){ 
-                s21[0] = 1.0-pow(1,-320);
-            }
-            sig[0] = sig_eta[0] * (1.0 - s21[0]);
-            mvrnormal(constant, mu, sig, constant, eta); 
-            mvrnormal(constant, mu, sig_e, constant, eps);             
-            zfore[i] = rho[0]*(zT[i]-eps[0])+XB1[i]+eta[0]+eps[0];                                 
-            }
-            else{
-*/
+
             extn_12(i, n, S_eta12,S_eta12c); // n x 1
             xTay(S_eta12c, Si_eta, w, n, mu); // 1 x 1 for mean            
             xTay(S_eta12c, Si_eta, S_eta12c, n, s21);            
@@ -222,34 +149,13 @@ void zlt_fore_ar(int *cov, int *K, int *nsite, int *n, int *r, int *p,
             mvrnormal(constant, mu, sig, constant, eta); 
             mvrnormal(constant, mu, sig_e, constant, eps);             
             zfore[i] = rho[0]*(zT[i]-eps[0])+XB1[i]+eta[0]+eps[0];                                 
-//            }
          }
          put_together1(l, k, nsite, r, K, foreZ, zfore);
        }
        for(k=1; k<K1; k++){     
-         extract_alt2(l, k, nsite, rK, K, XB, XB1); // nsite x 1
          mvrnormal(constant, mu, sig_e, constant, eps); 
-         extract_alt2(l, t, nsite, rT, T, z, zT); // nsite x 1
          extract_alt2(l, k, nsite, rK, K, XB, XB1); // nsite x 1
          for(i=0; i<ns; i++){
-/*
-            if(ns == n1){
-            extn_12(i, n, S_eta,S_eta12c); // n x 1
-            xTay(S_eta12c, Si_eta, w, n, mu); // 1 x 1 for mean            
-            xTay(S_eta12c, Si_eta, S_eta12c, n, s21);            
-            if(s21[0] > 1.0){
-                s21[0] = 1.0-pow(1,-320);
-            }
-            if(s21[0] == 1.0){ 
-                s21[0] = 1.0-pow(1,-320);
-            }
-            sig[0] = sig_eta[0] * (1.0 - s21[0]);
-            mvrnormal(constant, mu, sig, constant, eta); 
-            mvrnormal(constant, mu, sig_e, constant, eps);             
-            zfore[i] = rho[0]*(zT[i]-eps[0])+XB1[i]+eta[0]+eps[0];                                 
-            }
-            else{            
-*/
             extn_12(i, n, S_eta12,S_eta12c);
             xTay(S_eta12c, Si_eta, w, n, mu); // 1 x 1 for mean            
             xTay(S_eta12c, Si_eta, S_eta12c, n, s21);            
@@ -263,13 +169,12 @@ void zlt_fore_ar(int *cov, int *K, int *nsite, int *n, int *r, int *p,
             mvrnormal(constant, mu, sig, constant, eta); 
             mvrnormal(constant, mu, sig_e, constant, eps);             
             zfore[i] = rho[0]*(zfore[i]-eps[0])+XB1[i]+eta[0]+eps[0];                                 
-//            }
          }  
          put_together1(l, k, nsite, r, K, foreZ, zfore);
        }
      }
 
-
+     free(T1);
      free(S_eta); free(Si_eta); free(S_eta12); free(S_eta12c); free(det);  
      free(mu); free(sig); free(s21); free(XB); free(zT); free(XB1); 
      free(eta); free(eps); free(zfore);

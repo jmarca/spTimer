@@ -14,7 +14,8 @@
 // output into the txt files
 void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      int *n, int *T, int *r, int *rT, int *p, int *N, int *report,
-     int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,  
+     int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,
+     double *phi_a, double *phi_b,  
      double *prior_a, double *prior_b, double *prior_sig, double *phi, 
      double *tau, double *phis, int *phik, double *d, int *constant, 
      double *sig_e, double *sig_eta, double *sig_0, double *mu_l,  
@@ -25,15 +26,15 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
 //     unsigned iseed = 44;
 //     srand(iseed); 
      
-     int its1, col, i, j, n1, r1, T1, p1, N1, nr, rep1, nsite1, brin, trans1;
+     int its1, col, i, j, r1, rT1, p1, N1, rep1, nsite1, brin, trans1;
      its1 = *its;
      col = *constant;
-     n1 = *n;
+//     n1 = *n;
      r1 = *r;
-     T1 = *T;
+     rT1 =*rT;
      p1 = *p;
      N1 = *N;
-     nr = n1 * r1;
+//     nr = n1 * r1;
      rep1 = *report;
      nsite1 = *nsite;
      brin = *burnin;
@@ -55,9 +56,9 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      }      
          
      double *pr_mn, *pr_var;
-     pr_mn = (double *) malloc((size_t)((nsite1*r1*T1)*sizeof(double))); 
-     pr_var = (double *) malloc((size_t)((nsite1*r1*T1)*sizeof(double))); 
-     for(j=0; j<nsite1*r1*T1; j++){
+     pr_mn = (double *) malloc((size_t)((nsite1*rT1)*sizeof(double))); 
+     pr_var = (double *) malloc((size_t)((nsite1*rT1)*sizeof(double))); 
+     for(j=0; j<nsite1*rT1; j++){
           pr_mn[j] = 0.0;
           pr_var[j] = 0.0;
      }         
@@ -86,7 +87,7 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      acc = (double *) malloc((size_t)((col)*sizeof(double)));
 
      double *zp, *anf;
-     zp = (double *) malloc((size_t)((nsite1*r1*T1)*sizeof(double)));      
+     zp = (double *) malloc((size_t)((nsite1*rT1)*sizeof(double)));      
      anf = (double *) malloc((size_t)((nsite1*r1)*sizeof(double)));      
  
      double *nu, *nup;
@@ -149,12 +150,13 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      GetRNGstate();            
      for(i=0; i < its1; i++) {
 
-     JOINT_ar(n, T, r, rT, p, N, cov, spdecay, shape_e, shape_eta, shape_0,  
+     JOINT_ar(n, T, r, rT, p, N, cov, spdecay, shape_e, shape_eta, shape_0,
+     phi_a, phi_b,  
      prior_a, prior_b, prior_sig, phi1, tau, phis, phik, nu, d, constant, 
      sig_e1, sig_eta1, sig_01, mu_l1, rho1, beta1, X, z, o1, 
      phip, acc, nup, sig_ep, sig_etap, rhop, betap, mu_lp, sig_0p, op, w);
 
-     z_pr_ar(cov, nsite, n, r, rT, T, p, N, predN, d, d12, phip, nup, sig_ep, 
+     z_pr_ar(cov, nsite, n, r, rT, T, p, N, d, d12, phip, nup, sig_ep, 
      sig_etap, sig_0p, rhop, betap, mu_lp, X, predX, op, constant, zp);
      
      accept1 += acc[0];
@@ -191,7 +193,7 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      }
 
 // prediction samples
-     for(j=0; j<(nsite1*r1*T1); j++){
+     for(j=0; j<(nsite1*rT1); j++){
          if(trans1 == 0){
          if(i >= brin){  
            zp[j] = zp[j];
@@ -227,7 +229,8 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      }
 
       if(i >= brin){
-        annual_aggregate(aggtype, nsite, r, T, zp, anf);
+        annual_aggregate_uneqT(aggtype, nsite, r, T, rT, zp, anf);
+//        annual_aggregate(aggtype, nsite, r, T, zp, anf);
   	     for(j=0; j<(nsite1*r1); j++){
            fprintf(textan, "%f ", anf[j]);
          }
@@ -315,7 +318,7 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
 
 
 // predicted mean and sd
-     for(j=0; j < nsite1*r1*T1; j++){
+     for(j=0; j < nsite1*rT1; j++){
           pr_mn[j] = pr_mn[j]/iit;
           pr_var[j] = pr_var[j]/iit;
           pr_var[j] = pr_var[j] - pr_mn[j]*pr_mn[j];
@@ -336,6 +339,7 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
 void GIBBS_ar(double *flag, int *its, int *burnin,
      int *n, int *T, int *r, int *rT, int *p, int *N, int *report,
      int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,  
+     double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *prior_sig, double *phi, 
      double *tau, double *phis, int *phik, double *d, int *constant, 
      double *sig_e, double *sig_eta, double *sig_0, double *mu_l,  
@@ -347,7 +351,7 @@ void GIBBS_ar(double *flag, int *its, int *burnin,
 //     unsigned iseed = 44;
 //     srand(iseed); 
      
-     int its1, brin, col, i, j, n1, r1, T1, p1, N1, nr, rep1;
+     int its1, brin, col, i, j, r1, p1, N1, rep1;
      double *phip, *sig_ep, *sig_etap, *rhop, *betap;
      double *mu_lp, *sig_0p, *op;
      double *phi1, *sig_e1, *sig_eta1, *rho1, *beta1;
@@ -358,12 +362,12 @@ void GIBBS_ar(double *flag, int *its, int *burnin,
      its1 = *its;
      brin = *burnin;
      col = *constant;
-     n1 = *n;
+//     n1 = *n;
      r1 = *r;
-     T1 = *T;
+//     T1 = *T;
      p1 = *p;
      N1 = *N;
-     nr = n1 * r1;
+//     nr = n1 * r1;
      rep1 = *report;
           
      double accept1, mn_rep[N1], var_rep[N1];
@@ -429,6 +433,7 @@ void GIBBS_ar(double *flag, int *its, int *burnin,
      for(i=0; i < its1; i++) {
 
      JOINT_ar(n, T, r, rT, p, N, cov, spdecay, shape_e, shape_eta, shape_0,  
+     phi_a, phi_b,
      prior_a, prior_b, prior_sig, phi1, tau, phis, phik, nu, d, constant, 
      sig_e1, sig_eta1, sig_01, mu_l1, rho1, beta1, X, z1, o1, 
      phip, acc, nup, sig_ep, sig_etap, rhop, betap, mu_lp, sig_0p, op, w);

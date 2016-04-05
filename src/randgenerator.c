@@ -3,6 +3,9 @@
 #include "randgenerator.h"
 #include "mathematics.h"
 
+#ifdef TEST
+#endif
+
 /* This generates the random number*/
 double drand48 (void)
 {
@@ -151,6 +154,19 @@ void rigamma_val(int *n, double *shape, double *rate, double *result)
      return;
 }
 
+/*
+// This defines the random gamma variate using GUI library
+double rgammaa2 (double shape, double rate)
+{
+  // set up GSL RNG //
+  gsl_rng *r = gsl_rng_alloc(gsl_rng_mt19937);
+  // end of GSL setup //
+  out=gsl_ran_gamma(r, shape , rate);
+  return out;
+}     	
+*/
+
+
 /*****************************************/
     
 /* Multivariate random normal */
@@ -179,25 +195,34 @@ void chol_for_multivariate(double *s, int *n, double *ltrg)
   nn=*n;
 
   eps=1.e-5; // tolerance for near singularity
-  ltrg[0*nn+0]=sqrt(s[0*nn+0]);
+//  ltrg[0*nn+0]=sqrt(s[0*nn+0]);
+  ltrg[0]=sqrt( *s );
 
-  for(k=1;k<nn;k++)
-  { for(i=0;i<k;i++)
-    { sum=0.;
-      for(j=0;j<i;j++) sum+=ltrg[i*nn+j]*ltrg[k*nn+j];
-      if(fabs(s[k*nn+i]-sum)>eps) ltrg[k*nn+i]=(s[k*nn+i]-sum)/ltrg[i*nn+i];
-      else ltrg[k*nn+i]=0.;
-      ltrg[i*nn+k]=0.;
+  for(k=1;k<nn;k++){ 
+    for(i=0;i<k;i++){ 
+      sum=0.0;
+      for(j=0;j<i;j++) {
+          sum+=ltrg[i*nn+j]*ltrg[k*nn+j];
+      }
+      if(fabs(s[k*nn+i]-sum)>eps) {
+         ltrg[k*nn+i]=(s[k*nn+i]-sum)/ltrg[i*nn+i];
+      }
+      else{
+         ltrg[k*nn+i]=0.0;
+      }
+      ltrg[i*nn+k]=0.0;
     }
-
-    for(j=0,sum=0.;j<k;j++) sum+=ltrg[k*nn+j]*ltrg[k*nn+j];
-    if(s[k*nn+k]-sum<=0.)
-      { // Rprintf("Error! NOT a posi-definite matrix!!! \n ");
-      //{ Rprintf("Error! NOT a posi-definite matrix!!! \n Check the covariance and/or use \n (1) DISCRETE sampling or (2) FIXED value \n for spatial decay parameter \n");
+    for(j=0,sum=0.0;j<k;j++){
+        sum+=ltrg[k*nn+j]*ltrg[k*nn+j];
+    }
+    if(s[k*nn+k]-sum<=0.0)
+      { // Rprintf("Error! Not posi-definite matrix!");
       //;
       //exit(-1);
       }
-    else ltrg[k*nn+k]=sqrt(s[k*nn+k]-sum);
+    else {
+       ltrg[k*nn+k]=sqrt(s[k*nn+k]-sum);
+    }
   }
 
   return;
@@ -216,8 +241,12 @@ void mvrnormal(int *n, double *mu, double *s2, int *p, double *y)
   nn=*n;
   pp=*p;
 
-  z0=(double *) malloc(pp * sizeof(double));
-  lowert=(double *) malloc((pp*pp) * sizeof(double));
+//   z0=(double *) malloc(pp * sizeof(double));
+   z0=(double *) malloc((size_t)((pp)*sizeof(double)));
+
+//  lowert=(double *) malloc((pp*pp) * sizeof(double));
+   lowert=(double *) malloc((size_t)((pp*pp) * sizeof(double)));
+
   chol_for_multivariate(s2, p, lowert);
 
   #if TEST
@@ -227,10 +256,14 @@ void mvrnormal(int *n, double *mu, double *s2, int *p, double *y)
       Rprintf("\n");
   #endif
 
-  for(i=0;i<nn;i++)
-  { for(j=0;j<pp;j++) z0[j]=norm_rand(); //z0[j]=rnorm_for_multivariate();
-    for(j=0;j<pp;j++)
-    { for(zz=0.,k=0;k<=j;k++) zz+=lowert[j*pp+k]*z0[k];
+  for(i=0;i<nn;i++){ 
+      for(j=0;j<pp;j++) {
+          z0[j]=norm_rand(); //z0[j]=rnorm_for_multivariate();
+      }
+      for(j=0;j<pp;j++) { 
+          for(zz=0.,k=0;k<=j;k++){
+              zz+=lowert[j*pp+k]*z0[k];
+          }
       y[i+j*nn]=zz+mu[j];
     }
   }

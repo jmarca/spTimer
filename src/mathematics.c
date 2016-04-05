@@ -110,6 +110,58 @@ void annual_aggregate(int *aggtype, int *n, int *r, int *T, double *z,
       return;
 }
 
+// with unequal T
+void annual_aggregate_uneqT(int *aggtype, int *n, int *r, int *T, int *rT, 
+     double *z, double *out)
+{
+      int j, l, t, n1, r1, rT1, type1;
+      n1= *n;
+      r1= *r;
+      rT1= *rT;
+      type1= *aggtype;
+
+      double *tmp, *ave;
+      tmp = (double *) malloc((size_t)((rT1)*sizeof(double)));      
+      ave = (double *) malloc((size_t)((1)*sizeof(double)));      
+
+     int *T1, *T2; 
+     T1 = (int *) malloc((size_t)((r1)*sizeof(int)));
+     T2 = (int *) malloc((size_t)((r1+1)*sizeof(int)));
+     for(j=0; j<r1; j++){
+          T1[j] = T[j];
+     }
+     cumsumint(r, T, T2);  
+     
+	  for(j=0; j<n1; j++){
+	    for(l=0; l<r1; l++){
+	        for(t=0; t<T1[l]; t++){
+                tmp[t] = z[t+T2[l]+j*rT1];
+            }
+            // NONE
+            if(type1==0){
+ 		       out[l+j*r1] = 0.0; 
+            }         
+            // annual average value
+            if(type1==1){
+               mean(T, tmp, ave);                 
+ 		       out[l+j*r1] = ave[0]; 
+            }         
+            // annual 4th highest value
+            if(type1==2){
+ 		        qsort(tmp, T1[l], sizeof(double), sort_fnc);
+		        out[l+j*r1] = tmp[T1[l]-4];
+	        }
+	        // annual w126 option
+            if(type1==3){
+   	            out[l+j*r1] = w126_from_daily(tmp);
+            }         
+	    }
+      }
+      
+      free(T1); free(T2);
+      free(tmp); free(ave);
+      return;
+}
 
 
 
@@ -272,6 +324,90 @@ void stdeviation(int *n, double *x, double *sd)
 }
 
 /**************************************************/
+// sum of a variable x, with total number of observations n
+void sum( int *n, double *x, double *tot)
+{
+        int i,n1; 
+        n1= *n;
+        double tt = 0; 
+        /* total all scores */
+        for (i=0; i < n1; i++) {
+                tt += x[i];
+        } 
+        *tot=tt;
+        return;
+} 
+
+/**************************************************/
+// sum of the integer variable x, with total number of observations n
+void sumint( int *n, int *x, int *tot)
+{
+        int i,n1; 
+        n1= *n;
+        int tt = 0; 
+        /* total all scores */
+        for (i=0; i < n1; i++) {
+                tt += x[i];
+        } 
+        *tot=tt;
+        return;
+} 
+
+/**************************************************/
+// cumulative sum of a variable x, with total number of observations n
+// out shall be vector of n+1, first element is zero
+void cumsum( int *n, double *x, double *out)
+{
+        int i,n1; 
+        n1= *n;
+        double tt = 0; 
+
+        out[0] = 0.0;
+        /* total all scores */
+        for (i=0; i < n1; i++) {
+                tt += x[i];
+                out[i+1] = tt;
+        } 
+        return;
+} 
+
+/**************************************************/
+// cumulative sum of integer variable x, with total number of observations n
+// out shall be vector of n+1, first element is zero
+// used in void extract_X_uneqT function
+
+void cumsumint( int *n, int *x, int *out)
+{
+        int i; 
+        out[0] = 0; 
+        /* total all scores */
+        for (i=0; i < *n; i++) {
+            out[i+1] = out[i] + x[i];
+        } 
+        return;
+} 
+
+/*
+void cumsumint( int *n, int *x, int *out)
+{
+        int i,n1; 
+        n1= *n;
+        int tt, *out1;
+        out1 = (int *) malloc((size_t)((n1)*sizeof(int)));        
+
+        out[0] = 0; 
+        // total all scores 
+        for (i=0; i < n1; i++) {
+            tt += x[i];
+            out1[i] = tt;
+            out[i+1] = out1[i];
+        } 
+        free(out1);
+        return;
+} 
+*/
+
+/**************************************************/
 // Mean of a variable x, with total number of observations n
 void mean( int *n, double *x, double *ave)
 {
@@ -374,8 +510,8 @@ void maximum(int *n, double *x, double *maxi)
 void minimum(int *n, double *x, double *mini)
 {
      double temp;
-     int i,j, n1;
-     n1 = *n;
+     int i,j;
+//   n1 = *n;
      for(i=0;i< *n;i++){
      for(j=i+1;j< *n;j++)
      {
@@ -623,6 +759,24 @@ void IdentityM(int *n, double *I)
      return;
 }            
 
+// Create an diagonal Matrix with values
+void IdentityMX(int *n, double *x, double *I)
+{
+     int i, j, n1;
+     n1 =*n;
+     
+     for(i=0; i<n1; i++){
+         for(j=0; j< n1; j++){
+         if(j==i){
+           I[j+n1*i] = x[i];
+         }
+         else{
+           I[j+n1*i] = 0.0;
+         }
+         }
+     }
+     return;
+}            
          
                        
 
@@ -631,9 +785,9 @@ void IdentityM(int *n, double *I)
 // LPACK, BLAS version is modified by Rohan Shah
 void MAdd(double *x, int *xrow, int *xcol, double *y, double *out)
 {
-#ifdef USE_MKL
-	vdAdd((*xrow) * (*xcol), x, y, out);
-#else
+//#ifdef USE_MKL
+//	vdAdd((*xrow) * (*xcol), x, y, out);
+//#else
  int m, n, i, j;
  double tmp;
 
@@ -647,7 +801,7 @@ void MAdd(double *x, int *xrow, int *xcol, double *y, double *out)
    }
  }
  return;
- #endif
+// #endif
 }
 
 /*
@@ -730,7 +884,8 @@ void MProd(double *y, int *nycol, int *nyrow, double *x,
 	double one = 1, zero = 0;
 	dgemm("N", "N", nxrow, nycol, nyrow, &one, x, nxrow, y, nyrow, &zero, out, nxrow);
 #else
-     double tmp;
+     double *tmp;
+     tmp = (double *) malloc((size_t)((1)*sizeof(double)));
      int i, j, k, r, p, q;
 
   r=*nycol;    
@@ -739,11 +894,12 @@ void MProd(double *y, int *nycol, int *nyrow, double *x,
 
   for(i = 0; i < r; i ++){ 
     for(j = 0; j < q; j ++){ 
-         tmp = 0;
-         for(k = 0; k < p; k++) { tmp += y[i*p+k]*x[k*q+j]; }
-         out[i*q+j] = tmp; 
+         tmp[0] = 0;
+         for(k = 0; k < p; k++) { tmp[0] += y[i*p+k]*x[k*q+j]; }
+         out[i*q+j] = tmp[0]; 
     }
   }
+  free(tmp);
   return;
 #endif
 }
@@ -948,7 +1104,7 @@ void sq_rt(double *a, double *t, int p, double *det)
   u =  a[p+1]  - sqr(t[p] );
   if  ( u<v ) {
 //         printf("Exited from sqrt: Matrix not pd\n");
-         //Rprintf("C - Error1: Exited from sqrt: Matrix is not positive definite \n");
+         Rprintf("C - Error1: Exited from sqrt: Matrix is not positive definite \n");
          //;
          //exit(19);
    } else  t[p+1] = sqrt(u);
@@ -972,10 +1128,13 @@ void sq_rt(double *a, double *t, int p, double *det)
       u = a[i*p+i] - sum;
          if ( u<v ) {
 //                    printf("Exited from sqrt: Matrix not PD\n");
-                    //Rprintf("C - Error2: Failed to find determinant: Matrix not positive definite\n");
+                    Rprintf("C - Error2: Failed to find determinant: Matrix not positive definite\n");
                     //;
                     //exit(19);
-         } else  t[i*p+i] = sqrt(u);
+         } 
+         else {
+             t[i*p+i] = sqrt(u);
+         }
     } 
 
  } // If loop for p > 1 
