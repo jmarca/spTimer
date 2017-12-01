@@ -1,12 +1,61 @@
+2017-10-19
+
+	* Version 3.0-1
+	* Bugs fixed: Truncated GPP model with spatial and temporal predictions.
+	* Example files are updated. 
+	
+2017-10-15
+
+	* Version 3.0-0
+	* Added truncated/censored (only left-sided) Gaussian approach for GP and GPP models with spatial and temporal predictions.
+	* Created an option that will return the fitted values and sd on the original scale. Use fitted.values="ORIGINAL" to get it.
+    * Added more flexibility for chosing hyper-parameters of the prior distributions for each coefficients of the model.          
+
+2015-08-19
+
+	* Version 2.0-1
+	* Fixed a bug on MH sampling for spatial decay parameter.
+
+2015-01-15
+
+	* Version 2.0
+	* See, spTimer paper in the Journal of Statistical Software.
+
+2014-06-24
+
+	* Version 1.0-2
+	* Fixed a bug in the GPP based model
+
+2014-03-04
+
+	* Version 1.0-1
+	* Changed arguments for spT.decay and spT.prior
+	* Replaced spT.data.selection function by spT.subset
+	* Added unequal length time-series, i.e., lengths of T_1, T_2, ..., T_r, can be different. Earlier versions assumed T_1=T_2=...=T_r=T.  
+
+2014-02-20
+
+	* Version 1.0
+	* See, spTimer paper in the Journal of Statistical Software (In Press)
+
+2014-01-28  
+
+	* Version 0.9-1
+	* Fixed bug for tol.dist.
+	* Added Summary option in prediction.
+
+2013-12-05  
+
+	* Version 0.9
+	* Changed a number of utility functions, see the manual.
+	* Added spacetime and sp class.
+
 2013-07-01  
 
 	* Version 0.8
-	* MAPE and Bias validation criteria has been included in function spT.validation.
 	* Added ChangeLog.
 
 2013-05-23  
 
 	* Version 0.7
 	* Added forecast class.
-
-

@@ -41,19 +41,6 @@ spT.MCMC.stat<-function(x, nBurn=0)
      }
   r<-dim(x$mu_lp)[[1]]
   p<-dim(x$betap)[[1]]
-  #para<-rbind((x$betap[,(nBurn+1):nItr]),
-  #            t(x$rhop[(nBurn+1):nItr]),
-  #            t(x$sig2ep[(nBurn+1):nItr]),
-  #            t(x$sig2etap[(nBurn+1):nItr]),
-  #            (x$sig2lp[,(nBurn+1):nItr]),
-  #            (x$mu_lp[,(nBurn+1):nItr]),
-  #            t(x$phip[(nBurn+1):nItr]))
-  #para<-spT.Summary.Stat(para)
-  #dimnames(para)[[1]][1:(1+p+2)]<-c(dimnames(x$X)[[2]],"rho",
-  #   "sig2eps","sig2eta")
-  #dimnames(para)[[1]][(1+p+2+1):(1+p+2+r)] <- paste("sig2:", 1:r)  
-  #dimnames(para)[[1]][(1+p+2+r+1):(1+p+2+r+r)] <- paste("mu:", 1:r)  
-  #dimnames(para)[[1]][(1+p+2+r+r+1)] <-c("phi")
   #
   if(x$cov.fnc=="matern"){
   para<-rbind((x$betap[,(nBurn+1):nItr]),
@@ -182,17 +169,6 @@ spT.MCMC.plot<-function(x, nBurn=0, ACF="FALSE", PARTIAL.acf="FALSE")
      }
   r<-x$r
   p<-x$p
-  #para<-rbind((x$betap[,(nBurn+1):nItr]),
-  #            t(x$rhop[(nBurn+1):nItr]),
-  #            t(x$sig2ep[(nBurn+1):nItr]),
-  #            t(x$sig2etap[(nBurn+1):nItr]),
-  #            (x$sig2lp[,(nBurn+1):nItr]),
-  #            (x$mu_lp[,(nBurn+1):nItr]),
-  #            t(x$phip[(nBurn+1):nItr]))
-  #dimnames(para)[[1]][1:(1+p+2+r+r+1)]<-c(dimnames(x$X)[[2]],"rho",
-  #   "sig2eps","sig2eta",paste("sig2:", 1:r),paste("mu:", 1:r),"phi")
-  #initial_val<-c(x$initials[[7]],x$initials[6],x$initials[2],
-  #           x$initials[3],x$initials[5],x$initials[4],x$initials[1])
   #
   if(x$cov.fnc=="matern"){
   para<-rbind((x$betap[,(nBurn+1):nItr]),
@@ -225,15 +201,6 @@ spT.MCMC.plot<-function(x, nBurn=0, ACF="FALSE", PARTIAL.acf="FALSE")
      }
   r<-dim(x$mu_lp)[[1]]
   p<-dim(x$betap)[[1]]
-  #para<-rbind((x$betap[,(nBurn+1):nItr]),
-  #            t(x$rhop[(nBurn+1):nItr]),
-  #            t(x$sig2ep[(nBurn+1):nItr]),
-  #            t(x$sig2etap[(nBurn+1):nItr]),
-  #            t(x$phip[(nBurn+1):nItr]))
-  #dimnames(para)[[1]][1:(1+p+2+1)]<-c(dimnames(x$X)[[2]],"rho",
-  #   "sig2eps","sig2eta","phi")
-  #initial_val<-c(x$initials[[7]],x$initials[4],x$initials[2],
-  #           x$initials[3],x$initials[1])
   #
   if(x$cov.fnc=="matern"){
   para<-rbind((x$betap[,(nBurn+1):nItr]),
@@ -265,14 +232,6 @@ spT.MCMC.plot<-function(x, nBurn=0, ACF="FALSE", PARTIAL.acf="FALSE")
      }
   r<-x$r
   p<-x$p
-  #para<-rbind((x$betap[,(nBurn+1):nItr]),
-  #            t(x$sig2ep[(nBurn+1):nItr]),
-  #            t(x$sig2etap[(nBurn+1):nItr]),
-  #            t(x$phip[(nBurn+1):nItr]))
-  #dimnames(para)[[1]]<-c(dimnames(x$X)[[2]],
-  #   "sig2eps","sig2eta","phi")
-  #initial_val<-c(x$initials[[4]],x$initials[2],
-  #             x$initials[3],x$initials[1])
   #
   if(x$cov.fnc=="matern"){
   para<-rbind((x$betap[,(nBurn+1):nItr]),
@@ -346,8 +305,10 @@ spT.segment.plot<-function(obs, est, up, low, limit=NULL){
    dimnames(mat)[[1]]<-c(paste("[Obs:<=",tol,"]"),paste("[Obs:> ",tol,"]")) 
    dimnames(mat)[[2]]<-c(paste("[Forecast:<=",tol,"]"),paste("[Forecast:>",tol,"]")) 
    POD<-round(mat[1,1]/sum(diag(mat)),4)
-   FAR<-round(mat[1,2]/sum(mat[1,]),4)
-   HAR<-round(sum(diag(mat))/sum(mat),4)
+   FAR<-round(mat[2,1]/sum(mat[,1]),4)
+   HAR<-round(mat[1,1]/sum(mat[1,]),4)
+   #FAR<-round(mat[1,2]/sum(mat[1,]),4)
+   #HAR<-round(sum(diag(mat))/sum(mat),4)
    top<-2*(mat[1,1]*mat[2,2]-mat[1,2]*mat[2,1])
    bot<-mat[1,2]^2+mat[2,1]^2+2*mat[1,1]*mat[2,2]+(mat[1,2]+mat[2,1])*sum(diag(mat))
    S<-round(top/bot,4)
@@ -358,60 +319,106 @@ spT.segment.plot<-function(obs, est, up, low, limit=NULL){
 ##
 ## For data split
 ##
- spT.data.selection<-function(data, random = TRUE, num.rs = NULL, 
-                     s = NULL, reverse=FALSE) 
+spT.subset<-function (data, var.name, s = NULL, reverse = FALSE) 
 {
 #
 # This function is to select and deduct the sites used to
 # fit or valid the model
 # Input: 	data
-#		s = the site numbers to be selected, e.g., c(4,7,10)
-#		num.rs = the number of sites to be selected , e.g., 3
-  if(reverse==FALSE){
-	if(random != TRUE){
-		num.rs<-NULL
-		num.rs<-length(s)
-		dat<-NULL
-			for(i in 1:num.rs){
-			dat<-rbind(dat,data[data[,1]==s[i], ])
-			}	
-		dat	
-	}	
-	else{
-		s<-NULL
-		a.s<-unique(data[,1])
-		s<-sort(sample(a.s, num.rs))
-		cat('Randomly selected sites =', s, '\n')
-		dat<-NULL
-			for(i in 1:num.rs){
-			dat<-rbind(dat,data[data[,1]==s[i], ])
-			}	
-		dat
+#		s = the site numbers to be selected/deselected, e.g., c(4,7,10)
 
-
-	}
-  }
-  else{
-	if(random != TRUE){
-		num.rs<-NULL
-		num.rs<-length(s)
-			for(i in 1:num.rs){
-			data<-data[data[,1] != s[i], ]
-			}	
-		data	
-	}	
-	else{
-		s<-NULL
-		a.s<-unique(data[,1])
-		s<-sort(sample(a.s, num.rs))
-		cat('Randomly deducted sites =', s, '\n')
-			for(i in 1:num.rs){
-			data<-data[data[,1] != s[i], ]
-			}	
-		data
-	}
-  }
- }
+    if (missing(var.name)) {
+        stop("Error: need to define the var.name")
+    }
+    if(!is.data.frame(data)){
+        stop("Error: data should be in data.frame")
+    }
+    if(!var.name %in%names(data)){
+        stop("Error: var.name should be in data")
+    }
+    data<-data[,c(var.name,names(data)[!names(data)%in%var.name])]
+    s.index <- unique(data[, var.name[1]])
+    if (reverse == FALSE) {
+        data <- data[data[,1] %in% (s.index[s.index %in% s]),]
+        data
+    }
+    else {
+        data <- data[data[,1] %in% (s.index[!s.index %in% s]),]
+        data
+    }
+}
+# spT.subset<-function(data, var.name, s = NULL, reverse=FALSE) 
+#{
+#
+# This function is to select and deduct the sites used to
+# fit or valid the model
+# Input: 	data
+#		s = the site numbers to be selected/deselected, e.g., c(4,7,10)
+#	if(missing(var.name)){
+#		stop("Error: need to define the var.name")
+#	}
+#   s.index <- unique(data[,var.name[1]])
+#    if(reverse==FALSE){
+#		dat <- subset(data, s.index %in% s)
+#		dat
+#	}
+#	else{
+#		dat <- subset(data, !(s.index %in% s))
+#		dat
+#	}
+#}
+##
+# spT.data.selection<-function(data, rs = NULL, s = NULL, reverse=FALSE) 
+#{
+#
+# This function is to select and deduct the sites used to
+# fit or valid the model
+# Input: 	data
+#		s = the site numbers to be selected/deselected, e.g., c(4,7,10)
+#		rs = the total number of random sites to be selected , e.g., 3
+#  if(reverse==FALSE){
+#	if(is.null(rs) & !is.null(s)){
+	# not random
+#		rs<-NULL
+#		dat<-NULL
+#			for(i in 1:length(s)){
+#			dat<-rbind(dat,data[data[,var.name[1]]==s[i], ])
+#			}	
+#		dat	
+#	}	
+#	else if (!is.null(rs) & is.null(s)){
+	# for randomly selected sites
+#		s<-NULL
+#		a.s<-unique(data[,1])
+#		a.s<-sort(sample(a.s, rs))
+#		cat('Randomly selected sites =', a.s, '\n')
+#		dat<-NULL
+#			for(i in 1:rs){
+#			dat<-rbind(dat,data[data[,1]==a.s[i], ])
+#			}	
+#		dat
+#	}
+#  }
+#  else{
+#	if(is.null(rs) & !is.null(s)){
+#		rs<-NULL
+#			for(i in 1:length(s)){
+#			data<-data[data[,1] != s[i], ]
+#			}	
+#		data	
+#	}	
+#	else{
+#		s<-NULL
+#		a.s<-unique(data[,1])
+#		a.s<-sort(sample(a.s, rs))
+#		cat('Randomly deducted sites =', a.s, '\n')
+#			for(i in 1:rs){
+#			data<-data[data[,1] != s[i], ]
+#			}	
+#		data
+#	}
+#  }
+# }
 ##
 ## grid coordinates
 ##
@@ -549,72 +556,104 @@ spT.geo_dist <- function(points)
    a
 }
 ##
-##
-##
-# Sigma_inv<-function(n, phi, D){
-#
-# Exponential covariance function
-# phi = decay parameter
-# D = distance matrix
-#
-#	Si_eta<-.C("MInv", as.double(exp(-phi*D)), inv=double(n*n), 
-#		as.integer(n), dt=as.double(1))$inv
-#	Si_eta
-# }
-##
-##
-##
-# Mean<-function(x){
-#
-# Mean function for missing data vector 'x'
-#
-#	x<-mean(x,na.rm=TRUE)
-#	x
-# }
-##
-##
-##
-# Median<-function(x){
-#
-# Median function for missing data vector 'x'
-#
-#	x<-median(x,na.rm=TRUE)
-#	x
-# }
-##
 ## This function extracts the data using formula
 ##
- Formula.matrix <-  function(formula, data, na.rm=FALSE)
+ Formula.matrix <- function(formula, data, na.rm=FALSE)
 {
       if(na.rm == FALSE){
-           mt <- terms(formula, data=data)
+           mt <- terms.formula(formula, data=data, specials=c("sp","tp"))
            if(missing(data)) data <- sys.frame(sys.parent())
-      
+           spcheck<-attr(mt, "specials")$sp
+           tpcheck<-attr(mt, "specials")$tp
            mf <- model.frame(mt, data=data, na.action=na.pass)
-	
-      # null model support
-           X <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
-           X <- as.matrix(X)         # X matrix
-           xvars <- dimnames(X)[[2]] # X variable names
-  
-           Y <- as.matrix(model.response(mf, "numeric")) # Y matrix
-      return(list(Y, X, xvars))
       }
       else{
-           mt <- terms(formula, data=data)
+           mt <- terms.formula(formula, data=data, specials=c("sp","tp"))
            if(missing(data)) data <- sys.frame(sys.parent())
-      
+           spcheck<-attr(mt, "specials")$sp
+           tpcheck<-attr(mt, "specials")$tp
            mf <- model.frame(mt, data=data)
-	
-      # null model support
-           X <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
-           X <- as.matrix(X)         # X matrix
-           xvars <- dimnames(X)[[2]] # X variable names
-  
-           Y <- as.matrix(model.response(mf, "numeric")) # Y matrix
-      return(list(Y, X, xvars))
       }
-
+      # null model support
+           "%w/o%" <- function(x, y) x[!x %in% y]
+           x.names <- attr(mt, "term.labels") # X variable names
+           X <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
+           if((!is.null(spcheck)) & (is.null(tpcheck))){
+           # only spatially varying  
+                x.names.sp <- x.names[attr(mt, "specials")$sp-1]
+                X.sp <- X[,c(x.names.sp)]
+                x.names <- dimnames(X)[[2]]
+                x.names <- x.names %w/o% x.names.sp
+                X <- X[,c(x.names)]
+                X <- as.matrix(X)
+                dimnames(X)[[2]]<-as.list(x.names) 
+                X.sp <- as.matrix(X.sp) 
+                dimnames(X.sp)[[2]]<-as.list(x.names.sp) 
+                X.tp <- NULL; x.names.tp<-NULL
+                if(dim(X)[[2]]==0){
+                  X<-as.matrix(rep(0, dim(mf)[[1]])); 
+                  x.names <- "(Intercept)"
+                }  
+           }
+           else if((!is.null(tpcheck)) & (is.null(spcheck))) {
+           # only temporally varying
+                x.names.tp <- x.names[attr(mt, "specials")$tp-1]
+                X.tp <- X[,c(x.names.tp)]
+                x.names <- dimnames(X)[[2]]
+                x.names <- x.names %w/o% x.names.tp
+                X <- X[,c(x.names)]
+                X <- as.matrix(X)
+                dimnames(X)[[2]]<-as.list(x.names) 
+                X.tp <- as.matrix(X.tp) 
+                dimnames(X.tp)[[2]]<-as.list(x.names.tp) 
+                X.sp <- NULL; x.names.sp<-NULL 
+                if(dim(X)[[2]]==0){
+                  X<-as.matrix(rep(0, dim(mf)[[1]])); 
+                  x.names <- "(Intercept)"
+                }  
+           }
+           else if((!is.null(spcheck)) & (!is.null(tpcheck))){
+           # both spatially and temporally varying
+                x.names.sp <- x.names[attr(mt, "specials")$sp-1]
+                x.names.tp <- x.names[attr(mt, "specials")$tp-1]
+                X.sp <- X[,c(x.names.sp)]
+                X.tp <- X[,c(x.names.tp)]
+                x.names <- dimnames(X)[[2]]
+                x.names <- x.names %w/o% x.names.sp
+                x.names <- x.names %w/o% x.names.tp
+                X <- X[,c(x.names)]
+                X <- as.matrix(X)
+                dimnames(X)[[2]]<-as.list(x.names) 
+                X.sp <- as.matrix(X.sp) 
+                dimnames(X.sp)[[2]]<-as.list(x.names.sp) 
+                X.tp <- as.matrix(X.tp) 
+                dimnames(X.tp)[[2]]<-as.list(x.names.tp) 
+                if(dim(X)[[2]]==0){
+                  X<-as.matrix(rep(0, dim(mf)[[1]])); 
+                  x.names <- "(Intercept)"
+                }  
+          }
+           else {
+                x.names <- dimnames(X)[[2]] 
+                X.sp <- NULL; x.names.sp<-NULL; X.tp <- NULL; x.names.tp<-NULL 
+           }
+           Y <- as.matrix(model.response(mf, "numeric")) # Y matrix
+       #
+       return(list(Y=Y, X=X, x.names=x.names, X.sp=X.sp, x.names.sp=x.names.sp, X.tp=X.tp, x.names.tp=x.names.tp))
+}
+##
+## This function extracts the coords using formula
+##
+ Formula.coords <- function(formula, data, na.rm=TRUE)
+{
+     mt <- terms(formula, data=data)
+     if(missing(data)) data <- sys.frame(sys.parent())
+     mf <- model.frame(mt, data=data)
+	 # null model support
+     X <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
+     X <- as.matrix(X[,2:3])         # X matrix
+	 X <- unique(X); dimnames(X)<-NULL
+     X
 }
 ##
 ## Summary Statistics
@@ -656,30 +695,7 @@ spT.geo_dist <- function(points)
          z[, 4] <- apply(y,2,up.low.limit,limit=nl)
          z[, 5] <- apply(y,2,up.low.limit,limit=nu)
          
-        #
-        # out <- .C('sum_stat',as.integer(nItr),as.integer(N),
-        #    as.double(y),as.integer(1),Mean=double(N),Median=double(N),
-        #    Var=double(N),Low=double(N),Up=double(N))[5:9]
-        #
-        # z[, 1] <- out$Mean
-        # z[, 2] <- out$Median
-        # z[, 3] <- sqrt(out$Var)
-        # z[, 4] <- out$Low
-        # z[, 5] <- out$Up
-        #
-        #nl <- as.integer(nItr * 0.025)
-        #nu <- as.integer(nItr * 0.975)
-        #for(i in 1:N) {
-        #        tmp <- sort(y[, i])
-        #        z[i, 1] <- mean(tmp)
-        #        z[i, 2] <- median(tmp)
-        #        z[i, 3] <- sqrt(var(tmp))
-        #        z[i, 4] <- tmp[nl]
-        #        z[i, 5] <- tmp[nu]
-        #}
-        #
         as.data.frame(z)
-        #z
 }
 ##
 ## Predictive Model Choice Criteria
@@ -811,7 +827,8 @@ spT.geo_dist <- function(points)
            }
            else{
             cat("#\n# Tolerance Limit (unit):", paste(tol))
-            cat("\n# Fitted and Predicted location distances are alright \n#\n")  
+            #cat("\n# Fitted and Predicted location distances are alright \n#\n")  
+            cat("\n# Location distances are alright \n#\n")  
            }
       }
       else{
@@ -830,14 +847,16 @@ spT.geo_dist <- function(points)
            }
            else{
             cat("#\n# Tolerance Limit (unit):", paste(tol))
-            cat("\n# Fitted and Predicted location distances are alright \n#\n")  
+            #cat("\n# Fitted and Predicted location distances are alright \n#\n")  
+            cat("\n# Location distances are alright \n#\n")  
            }
        }
 }
 ##
 ## To check sites inside codes
+
 ## 
-spT.check.sites.inside<-function(coords, method){
+spT.check.sites.inside<-function(coords, method, tol=0.1){
       #
       #
       if(!method %in% c("geodetic:km", "geodetic:mile", "euclidean",
@@ -862,11 +881,12 @@ spT.check.sites.inside<-function(coords, method){
       #
            fdm<-fdm[!is.na(fdm[,1]),]
       #
-           tol <- 0.01
+           #tol <- 0.01
            fdmis<-fdm[fdm[,1] < tol,]
       #
            if(!is.na(fdmis[1])==TRUE){
-            cat("\n# There are some locations very close ( < 0.01 unit) to each other.\n#\n")
+            cat("#\n# There are some locations very close:")
+            print(paste("( < ",tol," unit) to each other."))
             fdmis<-matrix(fdmis,(length(fdmis)/3),3) 
             for(i in 1:dim(fdmis)[[1]]){
             print(paste("Distance (unit):", round(fdmis[i,1],2)," site:",fdmis[i,2]," site:", fdmis[i,3],""))
@@ -877,12 +897,12 @@ spT.check.sites.inside<-function(coords, method){
             stop("Error: Termination.")
            }
        #
-           tol <- 0.5
-           fdmis<-fdm[fdm[,1] < tol,]
+           #tol <- 0.5
+           #fdmis<-fdm[fdm[,1] < tol,]
       #
-           if(!is.na(fdmis[1])==TRUE){
-            cat("#\n# Warnings: There are some locations very close ( < 0.5 unit) to each other.\n#\n")
-           }
+           #if(!is.na(fdmis[1])==TRUE){
+           # cat("#\n# Warnings: There are some locations very close ( < 0.5 unit) to each other.\n#\n")
+           #}
       #
 }
 ##
@@ -932,7 +952,7 @@ spT.check.sites.inside<-function(coords, method){
 ##
 ## validation criteria
 ##
-spT.validation <- function(z, zhat)
+spT.validation <- function(z, zhat, names=FALSE)
 {
  ##
  ## Validation Mean Squared Error (VMSE) 
@@ -1015,7 +1035,9 @@ spT.validation <- function(z, zhat)
     round(sum(u^2)/sum(v^2), 4)
  }
  ##
+ if(names==TRUE){
  cat("##\n Mean Squared Error (MSE) \n Root Mean Squared Error (RMSE) \n Mean Absolute Error (MAE) \n Mean Absolute Percentage Error (MAPE) \n Bias (BIAS) \n Relative Bias (rBIAS) \n Relative Mean Separation (rMSEP)\n##\n") 
+ }
  ##
    out<-NULL
    out$MSE<-VMSE(c(z), c(zhat))
@@ -1026,6 +1048,7 @@ spT.validation <- function(z, zhat)
    out$rBIAS<-rBIAS(c(z), c(zhat))
    out$rMSEP<-rMSEP(c(z), c(zhat))
    unlist(out)
+  
 }
 ##
 ## MCMC plots for individual values (trace, density, acf)
@@ -1101,32 +1124,14 @@ MCMC.plot.obj<-function(post_val, nItr, nBurn=0,
 ##
 as.mcmc.spT<-function(x, ...){
 
+    if (x$combined.fit.pred == TRUE) {
+        stop("\n# Error: not available for combined fit-prediction option. Please read the MCMC samples from the *.txt file manually.")
+    }
     model <- x$model
     if (is.null(model) == TRUE) {
         stop("\n# Error: need to define the model")
     }
-    else if (model == "AR") {
-        r <- x$r
-        p <- x$p
-        #para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), (x$sig2lp), (x$mu_lp), 
-        #        t(x$phip))
-        #dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta",
-        #        paste("sig2:",1:r),paste("mu:", 1:r),"phi")
-      #          
-      if(x$cov.fnc=="matern"){
-        para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), t(x$phip), t(x$nup))
-        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta", "phi", "nu")
-      }
-      else {
-        para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), t(x$phip))
-        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta", "phi")
-      }
-      #
-        para<-t(para)
-        para<-mcmc(para)
-        para
-    }
-    else if (model == "GPP") {
+    else if (model == "AR" | model == "truncatedAR") {
         r <- x$r
         p <- x$p
       #          
@@ -1143,17 +1148,80 @@ as.mcmc.spT<-function(x, ...){
         para<-mcmc(para)
         para
     }
-    else if (model == "GP") {
+    else if (model == "GPP" | model == "truncatedGPP") {
         r <- x$r
         p <- x$p
       #          
       if(x$cov.fnc=="matern"){
-        para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$phip), t(x$nup))
-        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "phi", "nu")
+        if((!is.null(x$sp.covariate.names))){  
+        para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), t(x$sig2betap), t(x$phip), t(x$nup))
+        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta", "sig2beta", "phi", "nu")
+        }
+        else{
+        para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), t(x$phip), t(x$nup))
+        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta", "phi", "nu")
+        }
       }
       else {
-        para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$phip))
-        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "phi")
+        if((!is.null(x$sp.covariate.names))){  
+        para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), t(x$sig2betap), t(x$phip))
+        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta", "sig2beta", "phi")
+        }
+        else{
+        para <- rbind((x$betap), t(x$rhop), t(x$sig2ep), t(x$sig2etap), t(x$phip))
+        dimnames(para)[[1]] <- c(dimnames(x$X)[[2]],"rho", "sig2eps", "sig2eta", "phi")
+        }
+      }
+      #
+        para<-t(para)
+        para<-mcmc(para)
+        para
+    }
+    else if (model == "GP" | model == "truncatedGP") {
+        r <- x$r
+        p <- x$p
+      #          
+      if(x$cov.fnc=="matern"){
+         if((is.null(x$sp.covariate.names)) & (is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$phip), t(x$nup))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "phi", "nu")
+         }
+         else if((!is.null(x$sp.covariate.names)) & (is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$sig2betap), t(x$phip), t(x$nup))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "sig2beta", "phi", "nu")
+         }
+         else if((is.null(x$sp.covariate.names)) & (!is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$sig2deltap), t(x$sig2op), t(x$phip), t(x$nup))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "sig2deltap", "sig2op", "phi", "nu")
+         } 
+         else if((!is.null(x$sp.covariate.names)) & (!is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$sig2betap), t(x$sig2deltap), t(x$sig2op), t(x$phip), t(x$nup))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "sig2beta", "sig2deltap", "sig2op", "phi", "nu")
+         }
+         else {
+            stop("Error")
+         } 
+      }
+      else {
+         if((is.null(x$sp.covariate.names)) & (is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$phip))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "phi")
+         }
+         else if((!is.null(x$sp.covariate.names)) & (is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$sig2betap), t(x$phip))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "sig2beta", "phi")
+         }
+         else if((is.null(x$sp.covariate.names)) & (!is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$sig2deltap), t(x$sig2op), t(x$phip))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "sig2deltap", "sig2op", "phi")
+         } 
+         else if((!is.null(x$sp.covariate.names)) & (!is.null(x$tp.covariate.names))){  
+           para <- rbind((x$betap), t(x$sig2ep), t(x$sig2etap), t(x$sig2betap), t(x$sig2deltap), t(x$sig2op), t(x$phip))
+           dimnames(para)[[1]] <- c(dimnames(x$X)[[2]], "sig2eps", "sig2eta", "sig2beta", "sig2deltap", "sig2op", "phi")
+         }
+         else {
+            stop("Error")
+         } 
       }
       #
         para<-t(para)
@@ -1189,51 +1257,187 @@ model.matrix.spT<-function(object, ...){
    }
 }
 ##
+## to include dimnames: function used in function summary statistics for spatially varying coef
+##
+sp.dimname.fnc<-function(x,names,n,q){
+  dimnames(x)[[2]][1:(n*q)]<-1:(n*q)
+  for(i in 1:q){
+    dimnames(x)[[2]][(1+(i-1)*n):(n*i)]<-rep(paste(names[i],"site",1:n,sep=""))
+  }
+  x
+}
+##
+## to include dimnames: function used in function summary statistics for temporally varying coef
+##
+tp.dimname.fnc<-function(x,names,u,T){
+  dimnames(x)[[2]][1:(u*T)]<-1:(u*T)
+  for(i in 1:u){
+    dimnames(x)[[2]][(1+(i-1)*T):(T*i)]<-rep(paste(names[i],"time",1:T,sep=""))
+  }
+  x
+}
+##
 ## use of summary
 ##
-summary.spT<-function(object, digits=4, package="spTimer", ...){
+summary.spT<-function(object, digits=4, package="spTimer", coefficient=NULL, ...){
+   #
    if(package=="coda"){
     if(object$combined.fit.pred==TRUE){
       stop("\n# Error: coda package is not useful for output with combined fit and predict \n")
     }
     else{
-     cat("\n#### MCMC summary statistics using coda package ####\n\n")
-     tmp<-as.mcmc(object)
-     summary(tmp, ...)
+     if(is.null(coefficient)){
+       cat("\n#### MCMC summary statistics using coda package ####\n")
+       if(!is.null(object$sp.covariate.names)) {cat("\n## \n# Spatially varying parameters are not included.\n##\n ")}
+       tmp<-as.mcmc(object)
+       summary(tmp, ...)
+     }
+     else if(coefficient=="spatial"){
+       if(is.null(object$sp.covariate.names)) {stop("\n## \n# Spatially varying parameters are not used in the model.\n##\n ")}
+       cat("\n#### MCMC summary statistics for the spatially varying coefficients ####\n")
+       tmp<-as.mcmc(t(object$betasp))
+       if(object$model=="GPP"){n<-object$knots} 
+       else{n<-object$n}
+       tmp<-sp.dimname.fnc(x=tmp,names=object$sp.covariate.names,n=n,q=object$q) 
+       summary(tmp, ...)
+     }
+     else if(coefficient=="temporal"){
+       if(is.null(object$tp.covariate.names)) {stop("\n## \n# Temporally varying dynamic parameters are not used in the model.\n##\n ")}
+       cat("\n#### MCMC summary statistics for the temporally varying dynamic coefficients ####\n")
+       tmp<-as.mcmc(t(object$betatp))
+       tmp<-tp.dimname.fnc(x=tmp,names=object$tp.covariate.names,u=object$u,T=object$T) 
+       summary(tmp, ...)
+     }
+     else if(coefficient=="rho"){
+       if(is.null(object$rhotp)) {stop("\n## \n# rho parameter has not been sampled in the temporally varying dynamic model.\n##\n ")}
+       cat("\n#### MCMC summary statistics for the rho coefficients ####\n")
+       tmp<-as.mcmc(t(object$rhotp))
+       dimnames(tmp)[[2]]<-paste("rho",1:object$u,sep="") 
+       summary(tmp, ...)
+     }
+     else{
+       stop("Error: the argument coefficient only takes charecter 'spatial' and 'temporal'.")
+     }
     }
    }
    else{
-   print(object)
-   cat("-----------------------------------------------------"); cat('\n');
-   cat("Parameters:\n")
-   print(round(object$parameter,digits=digits)); #cat("\n");
-   cat("-----------------------------------------------------"); cat('\n');
+     if(package=="spTDyn"){
+      coefficient <- coefficient
+     }
+     #
+     else if("Xsp"%in%names(object) | "Xtp"%in%names(object)){
+      coefficient <- coefficient   
+     }
+	 else{
+	   coefficient <- NULL
+	 }
+     #
+     if(is.null(coefficient)){
+       if((!is.null(object$sp.covariate.names)) & (!is.null(object$tp.covariate.names))){cat("\n## \n# Spatially and temporally varying parameters are not included.\n##\n ")}
+       else if((!is.null(object$sp.covariate.names)) & (is.null(object$tp.covariate.names))) {cat("\n## \n# Spatially varying parameters are not included.\n##\n ")}
+       else if((is.null(object$sp.covariate.names)) & (!is.null(object$tp.covariate.names))) {cat("\n## \n# Temporally varying dynamic parameters are not included.\n##\n ")}
+       else { }
+	   #ans<-NULL
+	   #ans$Model=object$model;ans$Call=object$call;ans$Iterations=object$iterations;ans$nBurn=object$nBurn;ans$PMCC=object$pmcc;ans$Parameters=round(object$parameter,digits=digits)
+       #ans
+       print(object)
+       cat("-----------------------------------------------------"); cat('\n');
+       cat("Parameters:\n")
+       print(round(object$parameter,digits=digits)); #cat("\n");
+       cat("-----------------------------------------------------"); cat('\n');
+     }
+     else if(coefficient=="spatial"){
+       if(is.null(object$sp.covariate.names)) {stop("\n## \n# Spatially varying parameters are not used in the model.\n##\n ")}
+       cat("\n#### MCMC summary statistics for the spatially varying coefficients ####\n")
+       tmp<-as.mcmc(t(object$betasp))
+       if(object$model=="GPP"){n<-object$knots} 
+       else{n<-object$n}
+       tmp<-sp.dimname.fnc(x=tmp,names=object$sp.covariate.names,n=n,q=object$q) 
+       summary(tmp, ...)
+     }
+     else if(coefficient=="temporal"){
+       if(is.null(object$tp.covariate.names)) {stop("\n## \n# Temporally varying dynamic parameters are not used in the model.\n##\n ")}
+       cat("\n#### MCMC summary statistics for the spatially varying coefficients ####\n")
+       tmp<-as.mcmc(t(object$betatp))
+       tmp<-tp.dimname.fnc(x=tmp,names=object$tp.covariate.names,u=object$u,T=object$T) 
+       summary(tmp, ...)
+     }
+     else if(coefficient=="rho"){
+       if(is.null(object$rhotp)) {stop("\n## \n# rho parameter has not been sampled in the temporally varying dynamic model.\n##\n ")}
+       cat("\n#### MCMC summary statistics for the rho coefficients ####\n")
+       tmp<-as.mcmc(t(object$rhotp))
+       dimnames(tmp)[[2]]<-paste("rho",1:object$u,sep="") 
+       summary(tmp, ...)
+     }
+     else{
+       stop("Error: the argument coefficient only takes character 'spatial' and 'temporal'.")
+     }
    }
 }
 ##
 ## use of plot
 ##
-plot.spT<-function(x, residuals=FALSE, ...){
+plot.spT<-function(x, residuals=FALSE, coefficient=NULL, ...){
    if(as.logical(residuals)==FALSE){
      if(x$combined.fit.pred==TRUE){
-      #cat("\n# Error: not useful to get MCMC plots for output with combined fit and predict \n#        use residuals=TRUE \n")
-      #cat("# ")
-      cat("\n## Only residual plots are available for output with combined fit and predict option \n\n")
-      plot(x$fitted[,1],residuals(x),ylab="Residuals",xlab="Fitted values");abline(h=0,lty=2);title("Residuals vs Fitted")
-      par(ask=TRUE)
-      qqnorm(residuals(x));qqline(residuals(x),lty=2)
+       if(!is.null(x$sp.covariate.names)) {cat("## \n# Spatially varying parameters are not included.\n##\n ")}
+       cat("\n## Only residual plots are available for output with combined fit and predict option \n\n")
+       plot(x$fitted[,1],residuals(x),ylab="Residuals",xlab="Fitted values");abline(h=0,lty=2);title("Residuals vs Fitted")
+       par(ask=TRUE)
+       qqnorm(residuals(x));qqline(residuals(x),lty=2)
      }
      else{
-      tmp<-as.mcmc(x)
-      plot(tmp, ...)
+       if(is.null(coefficient)){
+         if((!is.null(x$sp.covariate.names)) & (!is.null(x$tp.covariate.names))){cat("\n## \n# Spatially and temporally varying parameters are not included.\n##\n ")}
+         else if((!is.null(x$sp.covariate.names)) & (is.null(x$tp.covariate.names))) {cat("\n## \n# Spatially varying parameters are not included.\n##\n ")}
+         else if((is.null(x$sp.covariate.names)) & (!is.null(x$tp.covariate.names))) {cat("\n## \n# Temporally varying dynamic parameters are not included.\n##\n ")}
+         else {  }
+         tmp<-as.mcmc(x)
+         plot(tmp, ...)
+       }
+       else if(coefficient=="spatial"){
+         if(is.null(x$sp.covariate.names)) {stop("\n## \n# Spatially varying parameters are not used in the model.\n##\n ")}
+         tmp<-as.mcmc(t(x$betasp))
+         if(x$model=="GPP"){n<-x$knots} 
+         else{n<-x$n}
+         tmp<-sp.dimname.fnc(x=tmp,names=x$sp.covariate.names,n=n,q=x$q) 
+         plot(tmp, ...)
+       }
+       else if(coefficient=="temporal"){
+         if(is.null(x$tp.covariate.names)) {stop("\n## \n# Temporally varying dynamic parameters are not used in the model.\n##\n ")}
+         tmp<-as.mcmc(t(x$betatp))
+         tmp<-tp.dimname.fnc(x=tmp,names=x$tp.covariate.names,u=x$u,T=x$T) 
+         plot(tmp, ...)
+       }
+       else if(coefficient=="rho"){
+         if(is.null(x$rhotp)) {stop("\n## \n# rho parameter has not been sampled in the temporally varying dynamic model.\n##\n ")}
+         tmp<-as.mcmc(t(x$rhotp))
+         dimnames(tmp)[[2]]<-paste("rho",1:x$u,sep="") 
+         plot(tmp, ...)
+       }
+       else{
+         stop("Error: the argument coefficient only takes charecter 'spatial' and 'temporal'.")
+       }
      } 
    }
    else{
-   plot(x$fitted[,1],residuals(x),ylab="Residuals",xlab="Fitted values");abline(h=0,lty=2);title("Residuals vs Fitted")
-   par(ask=TRUE)
-   qqnorm(residuals(x));qqline(residuals(x),lty=2)
-   }
+     if(!is.null(x$sp.covariate.names)) {cat("## \n# Models fitted with spatially varying parameters.\n## \n ")}
+     plot(x$fitted[,1],residuals(x),ylab="Residuals",xlab="Fitted values");abline(h=0,lty=2);title("Residuals vs Fitted")
+     par(ask=TRUE)
+     qqnorm(residuals(x));qqline(residuals(x),lty=2)
+   } # end of 2nd if 
 }
+##
+## use of contour
+##
+#contour.spT<-function(x, surface="Mean", time=c(1), ...){
+#	z<-array(fitted(x)[,paste(surface)],dim=c(x$T*x$r,x$n))
+#	xyz<-cbind(x$coords,c(z[time,]))
+#	xyz<-interp(x=xyz[,1], y=xyz[,2], z=xyz[,3], xo=seq(min(xyz[,1]), max(xyz[,1]), length = 150),
+#		 yo=seq(min(xyz[,2]), max(xyz[,2]), length = 150),linear = TRUE, extrap=FALSE, 
+#		 duplicate = "error", dupfun = NULL, ncp = NULL)
+#	contour(xyz, ...) 
+#}
 ##
 ## use of coefficients
 ##
@@ -1277,7 +1481,158 @@ terms.spT<-function(x, ...){
   terms(x$call)
 }
 ##
-## print
+## For spatially varying beta
+##
+sp<-function(x){
+  class(x)<-"spBeta"
+  x
+}
+##
+## For temporally varying beta
+##
+tp<-function(x){
+  class(x)<-"tpBeta"
+  x
+}
+##
+## find close locations
+##
+spT.ObsGridLoc<-function(obsLoc, gridLoc, distance.method="geodetic:km",
+          plot=FALSE)
+{
+  #
+      #
+      if(!distance.method %in% c("geodetic:km", "geodetic:mile", "euclidean",
+        "maximum", "manhattan", "canberra")){
+        stop("\n# Error: correctly define distance.method \n")
+      }
+      #
+           coords.all <- rbind(obsLoc, gridLoc)
+           n1.sites <- 1:dim(obsLoc)[[1]]
+           n2.sites <- (dim(obsLoc)[[1]] + 1):(dim(coords.all)[[1]])
+      #
+      if(distance.method=="geodetic:km"){
+         coords.D <- as.matrix(spT.geodist(Lon=coords.all[,1],Lat=coords.all[,2], KM=TRUE))
+      }
+      else if(distance.method=="geodetic:mile"){
+         coords.D <- as.matrix(spT.geodist(Lon=coords.all[,1],Lat=coords.all[,2], KM=FALSE))
+      }
+      else{
+       coords.D <- as.matrix(dist(coords.all, distance.method, diag = T, upper = T))
+      }  
+      #
+      coords.D[is.na(coords.D)]<-0
+      diag(coords.D)<-NA
+      # 
+      fdmis<-coords.D[n1.sites, n2.sites]
+      min.fnc<-function(x){
+        x<-cbind(x,1:length(x))
+        x<-x[order(x[,1]),] 
+        x<-x[1,]
+        x  
+      }
+      fdmis<-t(apply(fdmis,1,min.fnc))
+      fdmis<-cbind(obsLoc,gridLoc[fdmis[,2],],fdmis[,2],fdmis[,1])
+      dimnames(fdmis)[[2]]<-c("obsLon","obsLat","gridLon","gridLat","gridNum","dist")
+      if(plot==TRUE){
+        plot(fdmis[,1:2],pch="*")
+        points(fdmis[,3:4],pch=19,col=2)
+        legend("bottomleft",pch=c(8,19),col=c(1,2),legend=c("Observation locations", "Grid locations"),cex=0.9)
+      }
+      fdmis
+}
+##
+## combine grid data and coords for spTimer input, gridData should be in array with dim = lon, lat, day, year 
+##
+spT.gridTodata<-function(gridData, gridLoc=NULL, gridLon=NULL, gridLat=NULL)
+{
+  # gridData should be in array with dim = lon, lat, day, year
+  # for morethan one array use list argument
+  # gridLoc should be obtain using expand.grid() argument
+
+  options(warn=-1)
+  if(!is.null(gridLoc)){
+    lonlat<-gridLoc
+    dimnames(lonlat)[[2]]<-c("lon","lat")
+  }
+  else if((!is.null(gridLon)) & (!is.null(gridLat))){ 
+    lonlat<-expand.grid(gridLon, gridLat)
+    dimnames(lonlat)[[2]]<-c("lon","lat")
+  }
+  else{
+    stop("Error: check grid location input in the function")
+  }
+  if(is.list(gridData)){
+      n<-length(gridData)
+      if(n>1){
+        dat<-NULL
+        for(i in 1:n){
+          grid<-c(gridData[[i]])
+          dat<-cbind(dat,grid)
+        }
+        for(i in 1:n){ dimnames(dat)[[2]][i]<-paste("grid",i,sep="") }
+        dat<-cbind(lon=rep(lonlat[,1],length(c(gridData[[1]]))/dim(lonlat)[[1]]),
+           lat=rep(lonlat[,2],length(c(gridData[[1]]))/dim(lonlat)[[1]]),dat)
+      }
+      else{
+      dat<-cbind(lon=rep(lonlat[,1],length(c(gridData[[1]]))/dim(lonlat)[[1]]),
+           lat=rep(lonlat[,2],length(c(gridData[[1]]))/dim(lonlat)[[1]]),grid=c(gridData))
+      }
+  }
+  else{
+      dat<-cbind(lon=rep(lonlat[,1],length(c(gridData))/dim(lonlat)[[1]]),
+           lat=rep(lonlat[,2],length(c(gridData))/dim(lonlat)[[1]]),grid=c(gridData))
+  }
+  dat<-dat[order(dat[,1],dat[,2]),]
+  dat
+}
+##
+## combine observation and grid data for model fitting 
+##
+spT.ObsGridData<-function(obsData, gridData, obsLoc, gridLoc, distance.method="geodetic:km")
+{
+  # obsData should be in data form
+  # gridData should be in array form with dim = lon, lat, day, year
+
+  obsLoc<-as.matrix(obsLoc)
+  gridLoc<-as.matrix(gridLoc)
+  dimnames(obsLoc)<-NULL
+  dimnames(gridLoc)<-NULL
+
+  if((is.list(gridData)) & (is.list(gridLoc))){
+      n1<-length(gridData)
+      n2<-length(gridLoc)
+      if(n1 != n2){ stop("\n Error: list of gridData and gridLoc should be same") }
+      datt<-NULL
+      for(i in 1:n1){
+         gLoc<-gridLoc[[i]]
+         gLoc<-gLoc[order(gLoc[,1],gLoc[,2]),]
+         comb<-spT.ObsGridLoc(obsLoc=obsLoc, gridLoc=gLoc, distance.method=distance.method)
+         grid<-spT.gridTodata(gridData=gridData[[i]], gridLoc=gLoc)
+         grid<-cbind(gridNum=sort(rep(1:dim(gLoc)[[1]],dim(grid)[[1]]/dim(gLoc)[[1]])),grid)
+         dat<-NULL
+         for(j in comb[,5]){ dat<-rbind(dat,grid[grid[,1]==j,]) }
+         dimnames(dat)[[2]]<-c(paste("gridNum",i,sep=""),paste("grid.lon",i,sep=""),paste("grid.lat",i,sep=""),paste("grid",i,sep=""))
+         if(dim(obsData)[[1]] != dim(dat)[[1]]){ stop("Error: check the day and year for gridData\n obsData and gridData time points mismatch.\n")}
+         datt<-cbind(datt,dat)
+      }
+      dat<-cbind(obsData,datt); rm(datt);
+      dat
+  }
+  else{
+      comb<-spT.ObsGridLoc(obsLoc=obsLoc, gridLoc=gridLoc[order(gridLoc[,1],gridLoc[,2]),], distance.method=distance.method)
+      grid<-spT.gridTodata(gridData=gridData, gridLoc=gridLoc[order(gridLoc[,1],gridLoc[,2]),])
+      grid<-cbind(gridNum=sort(rep(1:dim(gridLoc)[[1]],dim(grid)[[1]]/dim(gridLoc)[[1]])),grid)
+      dat<-NULL
+      for(i in comb[,5]){ dat<-rbind(dat,grid[grid[,1]==i,]) }
+      dimnames(dat)[[2]][2:3]<-c("grid.lon","grid.lat")
+      if(dim(obsData)[[1]] != dim(dat)[[1]]){ stop("Error: check the day and year for gridData\n   obsData and gridData time points mismatch.\n")}
+      dat<-cbind(obsData,dat)
+      dat
+  }
+}
+##
+## Print function
 ##
 print.spT<-function(x, ...) {
     cat("-----------------------------------------------------"); cat('\n');
@@ -1294,6 +1649,13 @@ print.spT<-function(x, ...) {
     #print(x$parameter); #cat("\n");
     #cat("-----------------------------------------------------"); cat('\n');
     cat("Computation time: "); cat(x$computation.time); cat("\n")
+}
+##
+## fitted function
+##
+fitted.spT<-function(object, ...){
+    x<-data.frame(object$fitted)
+    x
 }
 ##
 ## use of package forecast
@@ -1317,17 +1679,115 @@ as.forecast.object<-function(object, site=1, level=c(80,95), ...){
    x
 }
 ##
-## use of display
+## use of confint()
 ##
-
+confint.spT<-function(object, parm, level=0.95, ...){
+   #
+   x<-as.mcmc(object)
+   up<-level+(1-level)/2
+   low<-(1-level)/2
+   FUN <- function(x){quantile(x,probs=c(low,up))}
+   out<-apply(x,2,FUN=FUN)
+   out<-t(out)
+   if(missing(parm)){
+     out
+   }
+   else{
+    if(length(parm)>1){ 
+      out<-as.matrix(out[dimnames(out)[[1]] %in% parm,])
+	  out
+	}
+	else{
+      out<-t(as.matrix(out[dimnames(out)[[1]] %in% parm,]))
+  	  dimnames(out)[[1]]<-parm
+	  out
+	}
+   }
+}
 ##
-## use of offset
+## Gamma prior
 ##
-#offset.spT<-function(object){
-#  Call<-object$call
-  #Coefficients<-coef(object)
-  #return(Call,Coefficients)
-#}
+Gamm<-function(a=NA,b=NA){
+   out<-matrix(c(a,b),1,2)
+   class(out)<-"Gamma"
+   out
+}
+##
+## Normal prior
+##
+Norm<-function(mu=NA,sig=NA){
+   out<-matrix(c(mu,sig),1,2)
+   class(out)<-"Normal"
+   out
+}
+##
+## Uniform prior
+##
+Unif<-function(low=NA,up=NA){
+   out<-matrix(c(low,up),1,2)
+   class(out)<-"Uniform"
+   out
+}
+##
+## Truncated Gaussian code
+##
+truncated.fnc<-function(Y, at=0, lambda=NULL, both=FALSE){
+   #
+   #
+   # at is left-tailed
+   #
+      if(is.null(lambda)){
+	    stop("Error: define truncation parameter lambda properly using list ")
+	  }
+      if(is.null(at)){
+	    stop("Error: define truncation point properly using list ")
+	  }
+	  if(at < 0){
+	    stop("Error: currently truncation point only can take value >= zero ")
+	  }
+	  zm <- cbind(Y,Y-at,1)
+	  zm[zm[, 2] <= 0, 3] <- 0
+      zm[, 2] <- zm[, 2]^(1/lambda)
+	  zm[zm[, 3] == 0, 2] <- -(rgamma(nrow(zm[zm[,3]==0,]), shape=1, rate=1/(range(zm[zm[,3]==1,2],na.rm=TRUE)[[2]]/4.1)))
+	  #-(rexp(nrow(zm[zm[,3]==0,])*10, rate=1/(range(zm[zm[,3]==1,2],na.rm=TRUE)[[2]]/4.1)))
+	  # scale it 
+	  
+	  #
+      if (both == TRUE) {
+        zm
+      }
+      else {
+        c(zm[,2])
+      }
+    #
+}
+##
+## for truncated model
+##
+reverse.truncated.fnc<-function(Y, at=0, lambda=NULL){
+   #
+   # at is left-tailed
+   #
+      if(is.null(lambda)){
+	    stop("Error: define truncation parameter lambda properly using list ")
+	  }
+      zm <- Y
+      zm[zm <= 0]<- 0
+	  zm <- zm^(lambda)
+	  zm <- zm + at
+	  zm
+    #
+}
+##
+## probability below threshold (for truncated)
+##
+prob.below.threshold <- function(out, at){
+   # out is the N x nItr MCMC samples
+   fnc<-function(x, at){
+     length(x[x <= at])/length(x)
+   }   
+   apply(out,1,fnc,at=at)
+}
 ##
 ##
 ##

@@ -1,18 +1,21 @@
+useDynLib(spTimer, .registration = TRUE)
+#useDynLib(spTimer, .registration = TRUE, .fixes = "C_")
 
-useDynLib(spTimer)
-exportPattern("^[^\\.]")
-#export(spAR.Gibbs)
-#export(spAR.prediction)
-#export(spAR.forecast)
-#exportClasses(spAR.Gibbs,spAR.prediction,spAR.forecast)
+import(coda)
+import(sp)
+import(spacetime)
 
-#export(spT.Gibbs)
-#export(spT.prediction)
-#export(spT.forecast)
-#export(spT.priors)
-#export(spT.initials)
-#export(spT.geodist)
-#export(spT.decay)
+importFrom("grDevices", "dev.new")
+importFrom("graphics", "abline", "legend", "par", "points", "segments",
+     "title")
+importFrom("stats", "acf", "as.formula", "contrasts", "density",
+     "dist", "is.empty.model", "lm", "median", "model.frame",
+     "model.matrix", "model.response", "na.exclude", "na.omit",
+     "na.pass", "pacf", "qqline", "qqnorm", "quantile", "sd",
+     "terms", "terms.formula", "ts")
+importFrom("utils", "read.table")
+importFrom("stats", "rnorm")
+importFrom("stats", "rgamma")
 
 
 S3method(print,spT)
@@ -29,5 +32,43 @@ S3method(model.matrix,spT)
 S3method(residuals,spT)
 S3method(terms,spT)
 
+S3method(as.mcmc,spT)
+S3method(confint,spT)
+S3method(fitted,spT)
+S3method(formula,spT)
 
-#import(coda)
+exportClasses("spT")
+
+export(
+       "spT.Gibbs",
+       "spT.decay",
+       "spT.priors",
+       "spT.time",
+       "spT.initials",
+       "predict.spT",
+       "plot.spT",
+       "summary.spT",
+       "spT.geodist",
+	   "spT.geo.dist",
+	   "spT.geo_dist",
+       "spT.segment.plot",
+       "spT.subset",
+       "spT.grid.coords",
+       "spT.pCOVER",
+       "spT.validation",
+       "Formula.matrix",
+       "Formula.coords",
+       "as.mcmc.spT",
+       "as.forecast.object",
+       "confint.spT",
+	   "coef.spT",
+	   "residuals.spT",
+	   "print.spT",
+       "fitted.spT",
+       "formula.spT",
+	   "model.frame.spT",
+	   "model.matrix.spT",
+       "Gamm",
+       "Norm",
+       "Unif" 
+)

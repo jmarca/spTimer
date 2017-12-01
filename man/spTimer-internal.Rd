@@ -3,9 +3,13 @@
 \alias{.First.lib}
 \alias{.onLoad}
 \alias{.onAttach}
+\alias{as.forecast.object}
+\alias{stat.sum}
 \alias{Formula.matrix}
-\alias{Gam}
-\alias{Nor}
+\alias{Formula.coords}
+\alias{Gamm}
+\alias{Norm}
+\alias{Unif}
 \alias{PMCC}
 \alias{fnc.time}
 \alias{initials.checking.ar}
@@ -45,10 +49,23 @@
 \alias{formula.spT}
 \alias{terms.spT}
 \alias{model.matrix.spT}
+\alias{sp.dimname.fnc}
+\alias{tp.dimname.fnc}
+\alias{tp}
+\alias{sp}
+\alias{spT.ObsGridLoc}
+\alias{spT.ObsGridData}
+\alias{spT.gridTodata}
+%\alias{NYgrid}
 %\alias{imputation.z}
 %\alias{spT.keep.morethan.dist}
 %\alias{summary.spT}
 %\alias{plot.spT}
+\alias{sptruncGP.Gibbs}
+\alias{sptruncGPP.Gibbs}
+\alias{truncated.fnc}
+\alias{prob.below.threshold}
+\alias{reverse.truncated.fnc}
 \description{Internal spTimer functions}
 \keyword{internal}
 

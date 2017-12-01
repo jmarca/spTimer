@@ -17,7 +17,7 @@ spT.pCOVER(z=NULL,zup=NULL,zlow=NULL,zsample=NULL,level=95)
 \code{\link{spT.validation}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 # Create `x': the true values.
@@ -38,10 +38,10 @@ y <- matrix(rnorm(1000*5000,5,1),1000,5000)
 
 # The pCOVER is:
 
-spT.pCOVER(z=x, zsamples=y)
-spT.pCOVER(z=x, zsamples=y, level=50)
+spT.pCOVER(z=x, zsample=y)
+spT.pCOVER(z=x, zsample=y, level=50)
 
 ##  
-}
+%}
 }
 \keyword{utility}

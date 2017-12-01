@@ -29,7 +29,7 @@ spT.geo_dist(points)
 \code{\link{NYdata}}, \code{\link{spT.grid.coords}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 # Load 28 ozone monitoring locations of New York.
@@ -55,6 +55,6 @@ points<-c(point1,point2)
 spT.geo_dist(points)
 
 ##
-}
+%}
 }
 \keyword{utility}

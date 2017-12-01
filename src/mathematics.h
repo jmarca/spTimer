@@ -12,6 +12,8 @@ double max_pos();
 
 void annual_aggregate(int *aggtype, int *n, int *r, int *T, double *z, 
      double *out);
+void annual_aggregate_uneqT(int *aggtype, int *n, int *r, int *T, int *rT, 
+     double *z, double *out);     
 void sum_stat(int *its, int *N, double *tX, int *constant, 
      double *Mean, double *Median, double *Var, double *Low, double *Up);
 void sum_stat2(int *its, int *burnin, int *N, double *tX, int *constant, 
@@ -19,6 +21,10 @@ void sum_stat2(int *its, int *burnin, int *N, double *tX, int *constant,
 void stats(int *n, double *x, double *ave, double *sd, double *low, double *up);
 void variance(int *n, double *x, double *var);
 void stdeviation(int *n, double *x, double *sd);
+void sum( int *n, double *x, double *tot);
+void sumint( int *n, int *x, int *tot);
+void cumsum( int *n, double *x, double *out);
+void cumsumint( int *n, int *x, int *out);
 void mean( int *n, double *x, double *ave);
 void median(int *n, double *x, double *med);
 void range(int *n, double *x, double *low, double *up);
@@ -35,6 +41,8 @@ double sqr(double x);
 
 //void matprint2(double *x, int m, int n);
 void IdentityM(int *n, double *I);
+void IdentityMX(int *n, double *x, double *I);
+
 void MAdd(double *x, int *xrow, int *xcol, double *y, double *out);
 //void MAdd2(double *x, int *xrow, int *xcol, double *y, double *out);
 void MSub(double *x, int *xrow, int *xcol, double *y, double *out);

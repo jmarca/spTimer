@@ -8,6 +8,7 @@
 void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      int *n, int *T, int *r, int *rT, int *p, int *N, int *report,
      int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,  
+     double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *prior_sig, double *phi, 
      double *tau, double *phis, int *phik, double *d, int *constant, 
      double *sig_e, double *sig_eta, double *sig_0, double *mu_l,  
@@ -17,7 +18,8 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
      
 void GIBBS_ar(double *flag, int *its, int *burnin,
      int *n, int *T, int *r, int *rT, int *p, int *N, int *report,
-     int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,  
+     int *cov, int *spdecay, int *ft, 
+	 double *shape_e, double *shape_eta, double *shape_0, double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *prior_sig, double *phi, 
      double *tau, double *phis, int *phik, double *d, int *constant, 
      double *sig_e, double *sig_eta, double *sig_0, double *mu_l,  
@@ -35,6 +37,7 @@ void GIBBS_ar(double *flag, int *its, int *burnin,
 void JOINT_ar(int *n, int *T, int *r, int *rT, int *p, int *N, 
      int *cov, int *spdecay,
      double *shape_e, double *shape_eta, double *shape_0,  
+     double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *prior_sig, double *phi, 
      double *tau, double *phis, int *phik, double *nu, double *d, int *constant, 
      double *sig_e, double *sig_eta, 
@@ -43,6 +46,16 @@ void JOINT_ar(int *n, int *T, int *r, int *rT, int *p, int *N,
      double *phip, double *nup, double *accept,
      double *sig_ep, double *sig_etap, double *rhop, double *betap, 
      double *mu_lp, double *sig_l0p, double *op, double *w);
+
+void JOINTsp_ar(int *n, int *T, int *r, int *rT, int *p, int *q, int *N, 
+     int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,  
+     double *prior_a, double *prior_b, double *prior_sig, double *phi, 
+     double *tau, double *phis, int *phik, double *nu, double *d, int *constant, 
+     double *sig_e, double *sig_eta, double *sig_l0, double *mu_l, double *rho, 
+     double *beta, double *betas, double *X, double *Xsp, double *z, double *o, 
+     double *phip, double *accept, double *nup, double *sig_ep, double *sig_etap, 
+     double *rhop, double *betap, double *betasp, double *mu_lp, double *sig_l0p, 
+     double *op, double *w);
      
 void w_ar(int *n, int *r, int *T, int *rT, int *p, double *O_l0, 
      double *X, double *o, double *thetap, int *constant, double *w);
@@ -65,6 +78,14 @@ void theta_ar(int *n, int *r, int *T, int *rT, int *p, double *prior_sig,
      double *Q_eta, double *O_l0, double *X, double *o, int *constant, 
      double *thetap);
 
+void theta_ar_for_sp(int *n, int *r, int *T, int *rT, int *p, double *prior_sig, 
+     double *Q_eta, double *O_l0, double *X, double *XBsp, double *o, 
+     int *constant, double *thetap);
+
+void beta_ar_sp(int *n, int *r, int *T, int *rT, int *q, //double *prior_mu,
+     double *prior_sig, double *Q_eta, double *rho, double *O_l0, double *Xsp, 
+     double *XB, double *o, int *constant, double *betap);
+          
 void beta_ar(int *n, int *r, int *T, int *rT, int *p, 
      double *prior_sig, double *Q_eta, double *rho, 
      double *O_l0, double *X, double *o, int *constant, double *beta);
@@ -136,13 +157,13 @@ void deviance_ar(int *n, int *T, int *r, int *rT, int *p, int *N,
 /*****************************************************************************/
 
 void z_pr_its_ar(int *cov, int *its, int *nsite, int *n, int *r, int *rT, 
-     int *T, int *p, int *N, int *valN, double *d, double *d12, 
+     int *T, int *p, int *N, double *d, double *d12, 
      double *phip, double *nup, double *sig_ep, double *sig_etap, double *sig_l0p, 
      double *rhop, double *betap, double *mu_lp,  
      double *X, double *valX, double *op, int *constant, double *zpred);
 
 void z_pr_ar(int *cov, int *nsite, int *n, int *r, int *rT, int *T, int *p, 
-     int *N, int *valN, double *d, double *d12, double *phip, double *nup,
+     int *N, double *d, double *d12, double *phip, double *nup,
      double *sig_ep, double *sig_etap, double *sig_l0p, double *rhop, 
      double *betap, double *mu_lp,  double *X, double *valX,
      double *op, int *constant, double *zpred);

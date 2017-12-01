@@ -17,14 +17,13 @@ spT.grid.coords(Longitude = c(max, min),
 \code{\link{spT.geodist}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 # Load 29 ozone monitoring locations in New York.
 
-data(NYsite)	
-NYsite
-coords <- as.matrix(NYsite[,c(3,2)])
+data(NYdata)	
+coords <- as.matrix(NYdata[,c(2,3)])
 
 # Find the knots coordinates
 
@@ -34,6 +33,6 @@ knots.coords <- spT.grid.coords(Longitude=c(max(coords[,1]),
 knots.coords
 
 ##
-}
+%}
 }
 \keyword{utility}

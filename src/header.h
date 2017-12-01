@@ -12,9 +12,15 @@
 #include <float.h>
 #include <unistd.h>
 
+// GUI library
+//#include <gsl_rng.h>
+//#include <gsl_randist.h>
+
 #include <R.h>
 #include <Rmath.h>
 #include <Rinternals.h>
+
+#include <R_ext/Print.h>
 
 //#define PI    3.14159265358979323846 
 

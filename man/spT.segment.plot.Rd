@@ -18,7 +18,7 @@ spT.segment.plot(obs, est, up, low, limit = NULL)
 \code{\link{summary.spT}, \link{plot.spT}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 obs<-rnorm(10,15,1)
@@ -28,6 +28,6 @@ low<-rnorm(10,5,0.5)
 spT.segment.plot(obs,est,up,low,limit=c(0,30)) 
 
 ##
-}
+%}
 }
 \keyword{utility}

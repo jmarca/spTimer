@@ -1,14 +1,14 @@
 ##
 ## MCMC sampling for the AR models
-## time.data format: col-1: year, col-2: month, col-3: day
+## time.data format: col-1: year, col-2: day
 ##
 spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords, 
            priors=NULL, initials=NULL, nItr, nBurn=0, report=1, 
            tol.dist=2, distance.method="geodetic:km", cov.fnc="exponential",
-           scale.transform="NONE", spatial.decay, X.out=TRUE, Y.out=TRUE)
+           scale.transform="NONE", spatial.decay, fitted.values, X.out=TRUE, Y.out=TRUE)
 {
     start.time<-proc.time()[3]
-  #
+  # 
   #
     if(nBurn >= nItr){
          stop(paste("\n Error: iterations < nBurn\n Here, nBurn = ",nBurn," and iterations = ",nItr,"."))
@@ -27,7 +27,13 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
          Y <- XY[[1]]
          X <- as.matrix(XY[[2]])
          x.names <- XY[[3]]
-
+         Xsp <- XY[[4]]
+         x.names.sp <- XY[[5]]
+         Xtp <- XY[[6]]
+         x.names.tp <- XY[[7]]
+         if((!is.null(x.names.sp)) | (!is.null(x.names.tp))){
+           stop("\n## \n# Error: spatially and/or temporally varying approach is not available for the AR model\n ##\n")
+         }
    #
     if (missing(coords)) {
          stop("\n Error: need to specify the coords \n")
@@ -35,9 +41,12 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
     if ( !is.matrix(coords) ) {
          stop("\n Error: coords must be a (n x 2) matrix of xy-coordinate locations \n")
     }
+    if ( (!is.numeric(coords[,1])) | (!is.numeric(coords[,2]))) {
+         stop("\n Error: coords columns should be numeric \n")
+    }
    #
      method <- distance.method
-     spT.check.sites.inside(coords, method)
+     spT.check.sites.inside(coords, method, tol=tol.dist)
    #
    if(method=="geodetic:km"){
      coords.D <- as.matrix(spT.geodist(Lon=coords[,1],Lat=coords[,2], KM=TRUE))
@@ -51,7 +60,8 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
    #
    # check time.data
    if(is.null(time.data)){
-     time.data<-c(1,0,length(Y)/length(coords[,1]))
+     #time.data<-c(1,0,length(Y)/length(coords[,1]))
+     time.data<-list(1,length(Y)/length(coords[,1]))
    }
    else{
      time.data<-time.data
@@ -59,9 +69,24 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
    #
    #
          n <- length(coords[,1])            # number of sites
-         r <- time.data[1]                  # number of years
-         T <- time.data[3]                  # number of days
-         N <- n*r*T;  
+         r <- time.data[[1]]                  # number of years
+         T <- time.data[[2]]                  # number of days
+         # check for T
+         if(r > 1){ 
+            if(length(T) != r){         
+              T<-rep(T,r) 
+            }
+         }
+         #  
+         # checking unequal T
+         if(length(T) > 1){
+           rT <- sum(T)
+         }
+         else{
+           rT <- r*T
+         }
+         N <- n*rT
+
     #
     if (N != length(Y)) {
          stop(" Error: Years, Months, and Days are misspecified,\n i.e., total number of observations in the data set should be equal to N\n  : N = n * r * T \n   where, N = total number of observations in the data,\n          n = total number of sites,\n          r = total number of years,\n          T = total number of days.\n# Check the function spT.time.\n#\n")
@@ -76,7 +101,7 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
          shape_0<-n/2+priors$prior_a
     #
 
-         zm <- matrix(Y,r*T,n)
+         zm <- matrix(Y,rT,n)
          #cat("\n-- Initial Imputation using Amelia --\n")
          #zm <- imputation.z(zm)
          zm <- apply(zm,1,median,na.rm=TRUE)
@@ -85,7 +110,7 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
          zm[is.na(zm[,1]),1] <- zm[is.na(zm[,1]),2]
          zm[is.na(zm[,1]),1] <- median(zm[,2],na.rm=TRUE)
     #
-         flag <- matrix(NA,n*r*T,2)
+         flag <- matrix(NA,n*rT,2)
          flag[,1] <- c(Y)
          flag[!is.na(flag[,1]),2] <- 0
          flag[is.na(flag[,1]),2] <- 1
@@ -119,15 +144,41 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
          stop("\n Error: scale.transform is not correctly specified \n")
     }
     #
-      initials<-initials.checking.ar(initials,zm[,1],X,n,r,T,coords.D)
+      initials<-initials.checking.ar(initials,zm[,1],X,Xsp,n,r,T,coords.D)
     #
          o <- zm[,1]
     #
+	#
+	if(fitted.values=="ORIGINAL"){
+      if(scale.transform=="NONE"){
+         ft <- 0
+      }
+      else if(scale.transform=="SQRT"){
+         ft <- 1
+      }
+      else if(scale.transform=="LOG"){
+         ft <- 2
+      }
+      else{
+         stop("\n Error: scale.transform is not correctly specified \n")
+      }
+	}
+	else if(fitted.values=="TRANSFORMED"){
+        ft <- 0	
+	}
+	else{
+         stop("\n Error: fitted.values option is not correctly specified \n")
+	}
+	#
     #
     if(spatial.decay$type=="FIXED"){
          spdecay <- 1
+		 if(is.null(spatial.decay$value)){
+		 spatial.decay$value <- (3/max(c(coords.D))) 
+		 }
          init.phi <- spatial.decay$value 
          tuning <- 0; phis<-0; phik<-0; 
+		 phi_a <- 0; phi_b <- 0; 
     }
     else if(spatial.decay$type=="DISCRETE"){
          spdecay <- 2
@@ -135,17 +186,20 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
          tuning <-0; 
          phis<-spatial.decay$value; 
          phik<-spatial.decay$segments;
+		 phi_a<-0; phi_b<-0
     }
     else if(spatial.decay$type=="MH"){
          spdecay <- 3
          init.phi <- initials$phi 
          tuning <- spatial.decay$tuning
          phis<-0; phik<-0; 
+		 phi_a<-spatial.decay$val[1]
+		 phi_b<-spatial.decay$val[2]
     }
     else{
          stop("\n Error: spatial.decay is not correctly specified \n")
     }
-    #
+    # 
       if(length(initials$mu_l) != length(initials$sig_l0)){
          stop("Error: check the parameters with year labels")
       }  
@@ -164,14 +218,18 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
       if (length(initials$beta) != p){
          stop("Error: need to specify correct number of parameters for beta.")
       }
-    #
-    #
+    #    
+    if(length(x.names.sp)==0){
+    # non-spatial beta
       out<-.C('GIBBS_ar',as.double(flag[,2]),as.integer(nItr), 
            as.integer(nBurn), as.integer(n),as.integer(T),as.integer(r),
-           as.integer(r*T),as.integer(p),as.integer(N),as.integer(report),
-           as.integer(cov),as.integer(spdecay),as.double(shape_e),
-           as.double(shape_eta),as.double(shape_0),as.double(priors$prior_a),
-           as.double(priors$prior_b),as.double(priors$prior_sig),as.double(init.phi), 
+           as.integer(rT),as.integer(p),as.integer(N),as.integer(report),
+           as.integer(cov),as.integer(spdecay), as.integer(ft),
+		   as.double(shape_e),
+           as.double(shape_eta),as.double(shape_0),
+		   as.double(phi_a),as.double(phi_b),
+		   as.double(priors$prior_a),as.double(priors$prior_b),
+		   as.double(priors$prior_sig),as.double(init.phi), 
            as.double(tuning),as.double(phis),as.integer(phik),
            as.double(coords.D),as.integer(1),as.double(initials$sig2eps),
            as.double(initials$sig2eta),as.double(initials$sig_l0),as.double(initials$mu_l),
@@ -180,7 +238,11 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            phip=double(nItr),accept=double(1),nup=double(nItr),sig_ep=double(nItr),sig_etap=double(nItr), 
            rhop=double(nItr),betap=matrix(double(nItr*p),p,nItr),mu_lp=matrix(double(r*nItr),r,nItr),
            sig_l0p=matrix(double(r*nItr),r,nItr),op=matrix(double(nItr*N),N,nItr),wp=matrix(double(nItr*N),N,nItr),
-           fit=matrix(double(2*N),N,2),gof=double(1),penalty=double(1))[34:47]
+           fit=matrix(double(2*N),N,2),gof=double(1),penalty=double(1))[37:50]
+    }
+    else{
+         stop("\n#\n## Error: \n#")
+    }
     #
       accept <- round(out$accept/nItr*100,2)
     #
@@ -205,6 +267,9 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            output$sig2lp <- matrix(out$sig_l0p[1:r,(nBurn+1):nItr],r,length((nBurn+1):nItr))
            output$rhop <- as.matrix(out$rhop[(nBurn+1):nItr])
            output$betap <- matrix(out$betap[1:p,(nBurn+1):nItr],p,length((nBurn+1):nItr))
+           if(length(x.names.sp) != 0){          
+           output$betasp <- matrix(out$betasp[1:(n*q),(nBurn+1):nItr],n*q,length((nBurn+1):nItr))
+           }
            output$mu_lp <- matrix(out$mu_lp[1:r,(nBurn+1):nItr],r,length((nBurn+1):nItr))
            output$op <- out$op[1:N,(nBurn+1):nItr]
            output$wp <- out$wp[1:N,(nBurn+1):nItr]
@@ -216,6 +281,9 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            output$scale.transform<-scale.transform
            output$sampling.sp.decay<-spatial.decay
            output$covariate.names<-x.names
+           if(length(x.names.sp) != 0){          
+           output$sp.covariate.names<-c(x.names.sp)
+           }
            output$Distance.matrix <- coords.D
            output$coords <- coords
            output$n <- n
@@ -255,80 +323,6 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
     #
 }
 ##
-## Fitted values of z_lt (with MCMC values of o_lt)
-##
-# spAR.fit<-function(nBurn=0, posteriors, Summary=FALSE)
-#{
-#      start.time<-proc.time()[3]
-#      itt <- posteriors$iterations #dim(posteriors$op)[[2]]
-#      n <- posteriors$n
-#      r <- posteriors$r
-#      T <- posteriors$T
-#      N <- n*r*T #dim(posteriors$op)[[1]]
-#      if((nBurn+1) >= itt){
-#         stop(paste("\n Error: iterations < nBurn\n Here, iterations:(",itt,") and nBurn:(",nBurn,")."))
-#      }
-#      else{
-#      sig_epp <- posteriors$sig2ep[(nBurn+1):itt,]
-#      opp <- posteriors$op[,(nBurn+1):itt]
-#      it <- (itt-nBurn)
-#
-#        zp <-NULL
-#        zp<-matrix(.C('Z_fitfnc',as.integer(it),as.integer(N),as.double(sig_epp),as.double(opp),as.integer(1),out=double(N*it))$out,N,it)
-#
-#      output <- NULL
-#      output$samples <- zp
-#      }
-#     # 
-#      if(Summary == TRUE){
-#         if(it < 40){
-#          cat("##", "\n")
-#          cat("# Summary statistics are not given, because the number of samples (",it,") are too small.\n# nBurn = ",nBurn,". Iterations = ",nItr,".", "\n")
-#          cat("##", "\n")
-#    #
-#   end.time <- proc.time()[3]
-#   comp.time<-end.time-start.time
-#   comp.time<-fnc.time(comp.time)
-#   output$computation.time<-comp.time
-#    #
-#          #class(output) <- "spAR"
-#          output
-#         }
-#         else { 
-#          cat("##", "\n")
-#          cat("# Fitted samples and summary statistics are given.\n# nBurn = ",nBurn,". Iterations = ",itt,".", "\n")
-#          cat("##", "\n")
-#          szp<-spT.Summary.Stat(zp[,])
-#          output$Mean <- matrix(szp$Mean,r*T,n)
-#          output$Median <- matrix(szp$Median,r*T,n)
-#          output$SD <- matrix(szp$SD,r*T,n)
-#          output$Low <- matrix(szp[,4],r*T,n)
-#          output$Up <- matrix(szp[,5],r*T,n)
-#    #
-#   end.time <- proc.time()[3]
-#   comp.time<-end.time-start.time
-#   comp.time<-fnc.time(comp.time)
-#   output$computation.time<-comp.time
-#    #
-#          #class(output) <- "spAR"
-#          output
-#         }
-#      }
-#      else {
-#          cat("##", "\n")
-#          cat("# Fitted samples are given.\n# nBurn = ",nBurn,", Iterations = ",itt,".", "\n")	
-#          cat("##", "\n")
-#    #
-#   end.time <- proc.time()[3]
-#   comp.time<-end.time-start.time
-#   comp.time<-fnc.time(comp.time)
-#   output$computation.time<-comp.time
-#    #
-#          #class(output) <- "spAR"
-#          output
-#      }
-#}
-##
 ## Prediction of Z_lt for the AR models using MCMC samples
 ##
  spAR.prediction<-function(nBurn, pred.data, pred.coords, posteriors,
@@ -363,11 +357,17 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
         if (!is.matrix(coords)) {
            stop("Error: coords must be a (n x 2) matrix of xy-coordinate locations.")
         }
+        if ( (!is.numeric(coords[,1])) | (!is.numeric(coords[,2]))) {
+           stop("\n Error: coords columns should be numeric \n")
+        }
         if (missing(pred.coords)) {
            stop("Error: need to specify the prediction coords.")
         }
         if (!is.matrix(pred.coords)) {
            stop("Error: prediction coords must be a (n x 2) matrix of xy-coordinate locations.")
+        }
+        if ( (!is.numeric(pred.coords[,1])) | (!is.numeric(pred.coords[,2]))) {
+           stop("\n Error: prediction coords columns should be numeric \n")
         }
       #
            coords.all <- rbind(coords,pred.coords)
@@ -419,11 +419,16 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            r <- posteriors$r
            T <- posteriors$T
            p <- posteriors$p
-           rT <- r*T
-           N <- n*r*T
+           if(length(T)>1){
+              rT <- sum(T)
+           }
+           else{
+              rT <- r*T
+           }
+           N <- n*rT
       #
            nsite <- tn.predsites
-           predN <- nsite*r*T
+           predN <- nsite*rT
       #
     #
     # adding the formula in to the prediction dataset
@@ -433,13 +438,13 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
       call.f<-posteriors$call  
       call.f<-as.formula(paste("tmp~",paste(call.f,sep="")[[3]]))
       if(is.data.frame(pred.data)){
-      if((nsite*r*T)!=dim(pred.data)[[1]]){
+      if((nsite*rT)!=dim(pred.data)[[1]]){
         print("#\n # Check the pred.data \n#\n")
       }
-      pred.data$tmp<-rep(1,nsite*r*T)
+      pred.data$tmp<-rep(1,nsite*rT)
       }
       if(is.null(pred.data)){
-        pred.data<-data.frame(tmp=rep(1,nsite*r*T))
+        pred.data<-data.frame(tmp=rep(1,nsite*rT))
       }
       pred.x<-Formula.matrix(call.f,data=pred.data)[[2]]
     #
@@ -461,7 +466,7 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
       #
        out<-matrix(.C('z_pr_its_ar',as.integer(cov),as.integer(itt),as.integer(nsite), 
             as.integer(n),as.integer(r),as.integer(rT),as.integer(T),
-            as.integer(p),as.integer(N),as.integer(predN),as.double(d), 
+            as.integer(p),as.integer(N),as.double(d), 
             as.double(d12),as.double(phip),as.double(nup),as.double(sig_ep),as.double(sig_etap),
             as.double(sig_l0p),as.double(rhop),as.double(betap),
             as.double(mu_lp),as.double(fitted.X),
@@ -508,11 +513,11 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
           #
           szp<-spT.Summary.Stat(output$pred.samples[,])
           # 
-          output$Mean <- matrix(szp$Mean,r*T, nsite)
-          output$Median <- matrix(szp$Median,r*T, nsite)
-          output$SD <- matrix(szp$SD,r*T, nsite)
-          output$Low <- matrix(szp[,4],r*T, nsite)
-          output$Up <- matrix(szp[,5],r*T, nsite)
+          output$Mean <- matrix(szp$Mean,rT, nsite)
+          output$Median <- matrix(szp$Median,rT, nsite)
+          output$SD <- matrix(szp$SD,rT, nsite)
+          output$Low <- matrix(szp[,4],rT, nsite)
+          output$Up <- matrix(szp[,5],rT, nsite)
     #
    end.time <- proc.time()[3]
    comp.time<-end.time-start.time
@@ -542,7 +547,7 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
 ##
  spAR.forecast <- function(nBurn, K, fore.data, 
         fore.coords, posteriors, pred.samples.ar=NULL,
-        Summary=TRUE)
+        tol.dist, Summary=TRUE)
 {
       start.time<-proc.time()[3]
       #
@@ -567,12 +572,21 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
        if ( !is.matrix(fore.coords) ) {
          stop("\n# Error: fore.coords must be a matrix of xy-coordinate locations")
        }
+       if ( (!is.numeric(fore.coords[,1])) | (!is.numeric(fore.coords[,2]))) {
+           stop("\n Error: fore.coords columns should be numeric \n")
+       }
       #
       #
            n <- posteriors$n
            r <- posteriors$r
            T <- posteriors$T
-           N <- n*r*T
+           if(length(T)>1){
+             rT <- sum(T)
+           } 
+           else{
+             rT <- r*T
+           }
+           N <- n*rT
            p <- posteriors$p
            coords<-posteriors$coords
       #
@@ -594,18 +608,12 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
       #
       #
       if(is.null(pred.samples.ar)[1]) {
-         #if(dim(posteriors$coords)[[1]] != dim(fore.coords)[[1]]){
-         #  stop("\n# Error: need to provide the MCMC samples for predictions.\n  Or correctly define the forecast coords.\n")
-         #}
-         #else{
            nsite <- dim(fore.coords)[[1]]
-           predN <- nsite*r*T
-           #nsite <- predN/(r*T)
+           predN <- nsite*rT
            coords.D <- posteriors$Distance.matrix
            coords.f.D<-as.matrix(spT.geodist(Lon=c(fore.coords[,1],coords[,1]),
                                  Lat=c(fore.coords[,2],coords[,2]),KM=TRUE))
            coords.f.D<-coords.f.D[1:nsite,(nsite+1):(nsite+n)] 
-         #}
       }
       #
       if(!is.null(pred.samples.ar)[1]){
@@ -617,20 +625,16 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            stop("\n# Error: number of nBurn should be same as the number of nBurn in the predictions.")
         }  	
            predN <- length(pred.samples.ar$pred.samples[,])/itt
-           nsite <- predN/(r*T)
+           nsite <- predN/(rT)
            if(nsite!=dim(fore.coords)[[1]]){
               stop("#\n# Error: predAR should be equal to NULL for insite temporal forecast. \n  Or correctly define the forecast coords.\n#")
            }
-           #coords.D <- pred.samples.ar$Distance.matrix.pred
            coords.D <- posteriors$Distance.matrix
            coords.f.D<-as.matrix(spT.geodist(Lon=c(fore.coords[,1],coords[,1]),
                                  Lat=c(fore.coords[,2],coords[,2]),KM=TRUE))
            coords.f.D<-coords.f.D[1:nsite,(nsite+1):(nsite+n)] 
       }
       #
-      #
-      #
-           nsite <- predN/(r*T)
       #
     #
     # adding the formula in to the forecast dataset
@@ -641,7 +645,7 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
       call.f<-as.formula(paste("tmp~",paste(call.f,sep="")[[3]]))
       if(is.data.frame(fore.data)){
         if((nsite*r*K)!=dim(fore.data)[[1]]){
-          stop("\n# Check the fore.data and/or fore.coords and/or spT.time function#\n")
+          stop("\n# Check the newdata and/or newcoords for forecasts and/or spT.time function#\n")
           #stop("\n# Check the fore.data and/or spT.time function#\n")
         }
         fore.data$tmp<-rep(1,nsite*r*K)
@@ -666,15 +670,14 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            betap<-betap[,(nBurn+1):nItr]
       #
         w<-apply(posteriors$wp,1,median)
-        w<-matrix(w,r*T,n)
+        w<-matrix(w,rT,n)
         w<-apply(w,2,median)
-        #w<-apply(posteriors$wp[,(nBurn+1):nItr],2,function(x)apply(matrix(x,r*T,n),2,median))
+        #w<-apply(posteriors$wp[,(nBurn+1):nItr],2,function(x)apply(matrix(x,rT,n),2,median))
       #
-      #if(predN == N){
       if(is.null(pred.samples.ar)[1]){
       out<-matrix(.C('zlt_fore_ar_its_anysite',as.integer(cov),
            as.integer(itt),as.integer(K),as.integer(nsite),as.integer(n),
-           as.integer(r),as.integer(p),as.integer(r*T),as.integer(T),
+           as.integer(r),as.integer(p),as.integer(rT),as.integer(T),
            as.integer(r*K),as.integer(nsite*r*K),as.double(coords.D),as.double(t(coords.f.D)),
            as.double(phip),as.double(nup),as.double(sig_ep),as.double(sig_etap),
            as.double(rhop),as.double(fore.x),as.double(betap),
@@ -682,7 +685,6 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            as.integer(1),foreZ=double(nsite*r*K*itt))$foreZ,nsite*r*K,itt)
       }
       #
-      #if(predN != N){
       if(!is.null(pred.samples.ar)[1]){
       #
           if(posteriors$scale.transform=="NONE"){ 
@@ -697,7 +699,7 @@ pred.samples<-log(pred.samples.ar$pred.samples[,])
       # 
       out<-matrix(.C('zlt_fore_ar_its_anysite',as.integer(cov),
            as.integer(itt),as.integer(K),as.integer(nsite),as.integer(n),
-           as.integer(r),as.integer(p),as.integer(r*T),as.integer(T),
+           as.integer(r),as.integer(p),as.integer(rT),as.integer(T),
            as.integer(r*K),as.integer(nsite*r*K),as.double(coords.D),as.double(t(coords.f.D)),
            as.double(phip),as.double(nup),as.double(sig_ep),as.double(sig_etap),
            as.double(rhop),as.double(fore.x),as.double(betap),
@@ -718,17 +720,17 @@ pred.samples<-log(pred.samples.ar$pred.samples[,])
           }
           # 
       out<-NULL
-      # output$n.fore.sites <- nsite
-      #output$foreStep <- K
       output$fore.coords <- fore.coords
       output$distance.method<-posteriors$distance.method  
       output$cov.fnc<-posteriors$cov.fnc  
-      output$obsData<-matrix(posteriors$Y,r*T,n)  
-      output$fittedData<-matrix(posteriors$fitted[,1],r*T,n) 
+
+      output$obsData<-matrix(posteriors$Y,rT,n)  
+      output$fittedData<-matrix(posteriors$fitted[,1],rT,n) 
       if(posteriors$scale.transform=="SQRT"){output$fittedData<-output$fittedData^2}
       else if(posteriors$scale.transform=="LOG"){output$fittedData<-exp(output$fittedData)}
       else {output$fittedData<-output$fittedData}
-      output$residuals<-matrix(c(output$obsData)-c(output$fittedData),r*T,n)
+      output$residuals<-matrix(c(output$obsData)-c(output$fittedData),rT,n)
+
       #
       if(Summary == TRUE){
          if(itt < 40){
@@ -787,9 +789,7 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
             coords, pred.coords, priors, initials,
             pred.data, nItr, nBurn=0, report=1, tol.dist=2,
             distance.method="geodetic:km", cov.fnc="exponential",
-            scale.transform="NONE", 
-            spatial.decay=spT.decay(type="MH",tuning=0.01),
-            annual.aggregation="NONE")
+            scale.transform="NONE", spatial.decay, annual.aggregation="NONE")
 {
     start.time<-proc.time()[3]
   #
@@ -809,6 +809,8 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
          Y <- XY[[1]]
          X <- as.matrix(XY[[2]])
          x.names <- XY[[3]]
+         Xsp <- XY[[4]]
+         x.names.sp <- XY[[5]]
 
   #
     if (missing(coords)) {
@@ -817,9 +819,12 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
     if ( !is.matrix(coords) ) {
          stop("\n Error: coords must be a (n x 2) matrix of xy-coordinate locations \n")
     }
+    if ( (!is.numeric(coords[,1])) | (!is.numeric(coords[,2]))) {
+         stop("\n Error: coords columns should be numeric \n")
+    }
     #
       method <- distance.method
-      spT.check.sites.inside(coords, method)
+      spT.check.sites.inside(coords, method, tol=tol.dist)
    #
     if(method=="geodetic:km"){
       coords.D <- as.matrix(spT.geodist(Lon=coords[,1],Lat=coords[,2], KM=TRUE))
@@ -833,16 +838,31 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
    #
    # check time.data
    if(is.null(time.data)){
-     time.data<-c(1,0,length(Y)/length(coords[,1]))
+     #time.data<-c(1,0,length(Y)/length(coords[,1]))
+     time.data<-list(1,length(Y)/length(coords[,1]))
    }
    else{
      time.data<-time.data
    }
    #
          n <- length(coords[,1])            # number of sites
-         r <- time.data[1]                  # number of years
-         T <- time.data[3]                  # number of days
-         N <- n*r*T;  
+         r <- time.data[[1]]                  # number of years
+         T <- time.data[[2]]                  # number of days
+         # check for T
+         if(r > 1){ 
+            if(length(T) != r){         
+              T<-rep(T,r) 
+            }
+         }
+         #  
+         # checking unequal T
+         if(length(T) > 1){
+           rT <- sum(T)
+         }
+         else{
+           rT <- r*T
+         }
+         N <- n*rT
    #
     if (N != length(Y)) {
          stop(" Error: Years, Months, and Days are misspecified,\n i.e., total number of observations in the data set should be equal to N\n  : N = n * r * T \n   where, N = total number of observations in the data,\n          n = total number of sites,\n          r = total number of years,\n          T = total number of days.\n# Check the function spT.time.\n#\n")
@@ -856,14 +876,14 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
          shape_eta<-N/2+priors$prior_a
          shape_0<-n/2+priors$prior_a
     #
-         zm <- matrix(Y,r*T,n)
-         zm <- apply(zm,1,median,na.rm=T)
+         zm <- matrix(Y,rT,n)
+         zm <- apply(zm,1,median,na.rm=TRUE)
          zm <- rep(zm,n)
          zm <- cbind(Y,zm)
          zm[is.na(zm[,1]),1]=zm[is.na(zm[,1]),2]
          zm <- zm[,1]
     #
-         flag <- matrix(NA,n*r*T,2)
+         flag <- matrix(NA,n*rT,2)
          flag[,1] <- c(Y)
          flag[!is.na(flag[,1]),2] <- 0
          flag[is.na(flag[,1]),2] <- 1
@@ -905,15 +925,19 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
          stop("\n Error: scale.transform is not correctly specified \n")
     }
     #
-      initials<-initials.checking.ar(initials,zm,X,n,r,T,coords.D)
+      initials<-initials.checking.ar(initials,zm,X,Xsp,n,r,T,coords.D)
     #
-         #o <- zm - rnorm(N,0,sqrt(initials$sig2eps))
          o <- zm
+    #
     #
     if(spatial.decay$type=="FIXED"){
          spdecay <- 1
+		 if(is.null(spatial.decay$value)){
+		 spatial.decay$value <- (3/max(c(coords.D))) 
+		 }
          init.phi <- spatial.decay$value 
          tuning <- 0; phis<-0; phik<-0; 
+		 phi_a <- 0; phi_b <- 0; 
     }
     else if(spatial.decay$type=="DISCRETE"){
          spdecay <- 2
@@ -921,16 +945,20 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
          tuning <-0; 
          phis<-spatial.decay$value; 
          phik<-spatial.decay$segments;
+		 phi_a<-0; phi_b<-0
     }
     else if(spatial.decay$type=="MH"){
          spdecay <- 3
          init.phi <- initials$phi 
          tuning <- spatial.decay$tuning
          phis<-0; phik<-0; 
+		 phi_a<-spatial.decay$val[1]
+		 phi_b<-spatial.decay$val[2]
     }
     else{
          stop("\n Error: spatial.decay is not correctly specified \n")
     }
+    # 
     #
       if(length(initials$mu_l) != length(initials$sig_l0)){
          stop("Error: check the parameters with year labels")
@@ -963,39 +991,10 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
         if (!is.matrix(pred.coords)) {
            stop("Error: prediction coords must be a (n x 2) matrix of xy-coordinate locations.")
         }
+        if ( (!is.numeric(pred.coords[,1])) | (!is.numeric(pred.coords[,2]))) {
+           stop("\n Error: prediction coords columns should be numeric \n")
+        }
       #
-      #
-      #  if (is.null(pred.X)){
-      #     if(dimnames(X)[[2]][1]=="(Intercept)"){
-      #     pred.x <- matrix(rep(1,T*r*dim(pred.coords)[[1]]))
-      #     }
-      #     else{ 
-      #     stop("\n Error: need to specify the prediction covariates \n ...")
-      #     }
-      #  }
-      #
-      #  if (!is.null(pred.X)){
-      #  if (!is.matrix(pred.X)) {
-      #     stop("Error: pred.X must be a MATRIX of order (M x p),\n  p = number of parameters, M = pred.n*r*T.")
-      #  }
-      #
-      #  if(dimnames(X)[[2]][1]=="(Intercept)"){
-      #     Intercept <- rep(1,dim(pred.X)[1])
-      #     pred.x <- cbind(Intercept,pred.X)
-      #  } 
-      #
-      #  if(dimnames(X)[[2]][1] != "(Intercept)"){
-      #     pred.x <- pred.X
-      #  } 
-      #
-      #  }
-      #  pred.X <- NULL
-      #
-      #  if (length(pred.x[1,]) != length(X[1,])) {
-      #     stop("Error: fitted X and pred.X must have same number of variables.")
-      #  }
-      #
-
            coords.all <- rbind(coords,pred.coords)
            spT.check.locations(coords, pred.coords, method, tol=tol.dist)
            tn.fitsites <- length(coords[, 1])
@@ -1017,7 +1016,7 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
            dns <- coords.D.all[(tn.fitsites+1):length(coords.all[,1]), (tn.fitsites+1):length(coords.all[,1])]
       #
            nsite <- tn.predsites
-           predN <- nsite*r*T
+           predN <- nsite*rT
       #
     #
     # adding the formula in to the prediction dataset
@@ -1027,13 +1026,13 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
       call.f<-formula  
       call.f<-as.formula(paste("tmp~",paste(call.f,sep="")[[3]]))
       if(is.data.frame(pred.data)){
-      if((nsite*r*T)!=dim(pred.data)[[1]]){
+      if((nsite*rT)!=dim(pred.data)[[1]]){
         print("#\n # Check the pred.data \n#\n")
       }
-      pred.data$tmp<-rep(1,nsite*r*T)
+      pred.data$tmp<-rep(1,nsite*rT)
       }
       if(is.null(pred.data)){
-        pred.data<-data.frame(tmp=rep(1,nsite*r*T))
+        pred.data<-data.frame(tmp=rep(1,nsite*rT))
       }
       pred.x<-Formula.matrix(call.f,data=pred.data)[[2]]
     #
@@ -1063,16 +1062,17 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
         out <- NULL
         out <- .C("GIBBS_sumpred_txt_ar", as.integer(aggtype),as.double(flag), as.integer(nItr),
             as.integer(nBurn), as.integer(n), as.integer(T), as.integer(r), 
-            as.integer(r*T), as.integer(p), as.integer(N), as.integer(report),
-            as.integer(cov), as.integer(spdecay), as.double(shape_e), as.double(shape_eta), 
-            as.double(shape_0), as.double(priors$prior_a), as.double(priors$prior_b), 
+            as.integer(rT), as.integer(p), as.integer(N), as.integer(report),
+            as.integer(cov), as.integer(spdecay), as.double(shape_e), as.double(shape_eta), as.double(shape_0), 
+			as.double(phi_a), as.double(phi_b),
+			as.double(priors$prior_a), as.double(priors$prior_b), 
             as.double(priors$prior_sig), as.double(init.phi), as.double(tuning),
             as.double(phis), as.integer(phik), as.double(coords.D), 
             as.integer(1), as.double(initials$sig2eps), as.double(initials$sig2eta),
             as.double(initials$sig_l0), as.double(initials$mu_l), as.double(initials$rho), 
             as.double(initials$beta), as.double(X), as.double(zm), as.double(o),
             as.integer(nsite), as.integer(predN), as.double(d12), as.double(pred.x), 
-            as.integer(trans), accept=double(1), gof=double(1),penalty=double(1))[40:42] 
+            as.integer(trans), accept=double(1), gof=double(1),penalty=double(1))[42:44] 
      #
       out$accept <- round(out$accept/nItr*100,2)
       out$call<-formula
@@ -1085,7 +1085,6 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
      #
      #
            tmp<-read.table('OutAR_Values_Parameter.txt',sep='',header=FALSE)
-           #tmp<-tmp[(nBurn+1):nItr,-length(tmp[1,])]
            tmp<-tmp[(nBurn+1):nItr,]
            tmp<-spT.Summary.Stat(t(tmp))
            if(cov==4){
@@ -1169,65 +1168,162 @@ spAR.MCMC.Pred<-function(formula, data=parent.frame(), time.data,
 ##
 ## initials checking for AR
 ##
- initials.checking.ar<-function(x,o,X,n,r,T,d){
-     #
-     # x = initial values
-     #
+ initials.checking.ar<-function(x,o,X,Xsp,n,r,T,d){
+   #
+   # x = initial values
+   #
+   if(is.null(Xsp)){
+   #
+   ## for non-spatial beta
      if(is.null(x)){
-     x$phi=NULL; x$sig2eps=NULL; x$sig2eta=NULL; x$sig_l0=NULL;
-     x$rho=NULL; x$beta=NULL; x$mu_l=NULL;
-     x$phi<-(3/max(c(d)))#(-log(0.05)/max(c(d)))
-     x$sig2eps <- 0.01; x$sig2eta <- 0.1
-     x$mu_l<-rep(NA,r); x$sig_l0<-rep(0.1,r)
-     om <- matrix(o,r*T,n)
-     for(i in 1:r){
-       x$mu_l[i] <- mean(om[1+T*(i-1),],na.rm=T)
-     }
-     o1 <- matrix(NA,r*T,n)
-     for(i in 1:n){
-     for(j in 1:r){
-     o1[,i] <- om[(j-1)*T+c(2:T,NA),i]
-     }
-     }
-     lm.coef<-lm(c(o) ~ c(o1) + X-1)$coef
-     lm.coef[is.na(lm.coef)]<-0
-     x$rho<-lm.coef[[1]]
-     x$beta<-lm.coef[2:(dim(X)[[2]]+1)]
-     x
+       x$phi=NULL; x$sig2eps=NULL; x$sig2eta=NULL; x$sig_l0=NULL;
+       x$rho=NULL; x$beta=NULL; x$mu_l=NULL;
+       x$phi<-(3/max(c(d)))#(-log(0.05)/max(c(d)))
+       x$sig2eps <- 0.01; x$sig2eta <- 0.1
+       x$mu_l<-rep(NA,r); x$sig_l0<-rep(0.1,r)
+       if(length(T)>1){ 
+         rT <- sum(T)
+       }
+       else{ 
+         rT <- r*T
+       }
+       om <- matrix(o,rT,n)
+       for(i in 1:r){
+         x$mu_l[i] <- mean(om[1+c(0,cumsum(T))[[i]],],na.rm=TRUE)
+       }
+       o1 <- matrix(NA,rT,n)
+       for(i in 1:n){
+        for(j in 1:r){
+         o1[c((1+c(0,cumsum(T))[[j]]):(c(0,cumsum(T))[[j+1]])),i] <- om[c(0,cumsum(T))[[j]]+c(2:T[[j]],NA),i]
+        }
+       }
+       lm.coef<-lm(c(o) ~ c(o1) + X-1)$coef
+       lm.coef[is.na(lm.coef)]<-0
+       x$rho<-lm.coef[[1]]
+       x$beta<-lm.coef[2:(dim(X)[[2]]+1)]
+       x
      }
      else{
-     if(is.null(x$phi)){ 
-     x$phi<-(-log(0.05)/max(c(d)))      
-     }
-     if(is.null(x$sig2eps)){
-     x$sig2eps<-0.01
-     }
-     if(is.null(x$sig2eta)){
-     x$sig2eta<-0.1
-     }
-     if(is.null(x$mu_l)){
-     x$mu_l<-rep(NA,r); om <- matrix(o,r*T,n)
-     for(i in 1:r){
-       x$mu_l[i] <- mean(om[1+T*(i-1),],na.rm=T)
-     }
-     }
-     if(is.null(x$sig_l0)){
-     x$sig_l0<-rep(0.1,r)
-     }
-     if(is.null(x$rho)|is.null(x$beta)){
-      o1 <- matrix(NA,r*T,n); om <- matrix(o,r*T,n)
-      for(i in 1:n){
-       for(j in 1:r){
-        o1[,i] <- om[(j-1)*T+c(2:T,NA),i]
+       if(is.null(x$phi)){ 
+        x$phi<-(-log(0.05)/max(c(d)))      
        }
-      }
-      lm.coef<-lm(c(o) ~ c(o1) + X -1)$coef
-      lm.coef[is.na(lm.coef)]<-0
-      x$rho<-lm.coef[[1]]
-      x$beta<-lm.coef[2:(dim(X)[[2]]+1)]
+       if(is.null(x$sig2eps)){
+        x$sig2eps<-0.01
+       }
+       if(is.null(x$sig2eta)){
+        x$sig2eta<-0.1
+       }
+       if(is.null(x$mu_l)){
+        x$mu_l<-rep(NA,r); 
+        if(length(T)>1){ 
+          rT <- sum(T)
+        }
+        else{ 
+          rT <- r*T
+        }
+        om <- matrix(o,rT,n)
+        for(i in 1:r){
+         x$mu_l[i] <- mean(om[1+c(0,cumsum(T))[[i]],],na.rm=TRUE)#mean(om[1+T*(i-1),],na.rm=T)
+        }
+       }
+       if(is.null(x$sig_l0)){
+        x$sig_l0<-rep(0.1,r)
+       }
+       if(is.null(x$rho)|is.null(x$beta)){
+        if(length(T)>1){ 
+          rT <- sum(T)
+        }
+        else{ 
+          rT <- r*T
+        }
+        om <- matrix(o,rT,n)
+        o1 <- matrix(NA,rT,n)
+        for(i in 1:n){
+         for(j in 1:r){
+          o1[c((1+c(0,cumsum(T))[[j]]):(c(0,cumsum(T))[[j+1]])),i] <- om[c(0,cumsum(T))[[j]]+c(2:T[[j]],NA),i]#om[(j-1)*T+c(2:T,NA),i]
+         }
+        }
+        lm.coef<-lm(c(o) ~ c(o1) + X -1)$coef
+        lm.coef[is.na(lm.coef)]<-0
+        x$rho<-lm.coef[[1]]
+        x$beta<-lm.coef[2:(dim(X)[[2]]+1)]
+       }
+       x
      }
-     x
+   }
+   else{
+   #
+   ## for spatial beta
+     if(is.null(x)){
+       x$phi=NULL; x$sig2eps=NULL; x$sig2eta=NULL; x$sig_l0=NULL;
+       x$rho=NULL; x$beta=NULL; x$mu_l=NULL;
+       x$phi<-(3/max(c(d)))#(-log(0.05)/max(c(d)))
+       x$sig2eps <- 0.01; x$sig2eta <- 0.1
+       x$mu_l<-rep(NA,r); x$sig_l0<-rep(0.1,r)
+       om <- matrix(o,r*T,n)
+       for(i in 1:r){
+         x$mu_l[i] <- mean(om[1+T*(i-1),],na.rm=TRUE)
+       }
+       o1 <- matrix(NA,r*T,n)
+       for(i in 1:n){
+        for(j in 1:r){
+         o1[,i] <- om[(j-1)*T+c(2:T,NA),i]
+        }
+       }
+       q<-length(c(Xsp))/(n*r*T)
+       dump<-sort(rep(1:n,r*T)) 
+       dump<-model.matrix(~factor(dump)-1)
+       tdump<-NULL; for(i in 1:q){ tdump <- cbind(tdump,dump) }
+       dump<-array(c(Xsp),dim=c(r*T,n,q))
+       for(j in 1:q){for(i in 1:n){ tdump[,i+(j-1)*n]<-tdump[,i+(j-1)*n]*dump[,i,j] }}
+       lm.coef<-lm(c(o) ~ c(o1) + X + tdump - 1)$coef
+       lm.coef[is.na(lm.coef)]<-0
+       x$rho<-lm.coef[[1]]
+       x$beta<-lm.coef[2:(dim(X)[[2]]+1)]
+       x$betasp<-lm.coef[(dim(X)[[2]]+2):(dim(X)[[2]]+1+(n*q))]
+       x
      }
+     else{
+       if(is.null(x$phi)){ 
+        x$phi<-(-log(0.05)/max(c(d)))      
+       }
+       if(is.null(x$sig2eps)){
+        x$sig2eps<-0.01
+       }
+       if(is.null(x$sig2eta)){
+        x$sig2eta<-0.1
+       }
+       if(is.null(x$mu_l)){
+        x$mu_l<-rep(NA,r); om <- matrix(o,r*T,n)
+        for(i in 1:r){
+         x$mu_l[i] <- mean(om[1+T*(i-1),],na.rm=TRUE)
+        }
+       }
+       if(is.null(x$sig_l0)){
+        x$sig_l0<-rep(0.1,r)
+       }
+       if(is.null(x$rho)|is.null(x$beta)){
+        o1 <- matrix(NA,r*T,n); om <- matrix(o,r*T,n)
+        for(i in 1:n){
+         for(j in 1:r){
+          o1[,i] <- om[(j-1)*T+c(2:T,NA),i]
+         }
+        }
+        q<-length(c(Xsp))/(n*r*T)
+        dump<-sort(rep(1:n,r*T)) 
+        dump<-model.matrix(~factor(dump)-1)
+        tdump<-NULL; for(i in 1:q){ tdump <- cbind(tdump,dump) }
+        dump<-array(c(Xsp),dim=c(r*T,n,q))
+        for(j in 1:q){for(i in 1:n){ tdump[,i+(j-1)*n]<-tdump[,i+(j-1)*n]*dump[,i,j] }}
+        lm.coef<-lm(c(o) ~ c(o1) + X + tdump - 1)$coef
+        lm.coef[is.na(lm.coef)]<-0
+        x$rho<-lm.coef[[1]]
+        x$beta<-lm.coef[2:(dim(X)[[2]]+1)]
+        x$betasp<-lm.coef[(dim(X)[[2]]+2):(dim(X)[[2]]+1+(n*q))]
+       }
+       x
+     }
+   }
 }
 ##
 ## priors checking for AR
