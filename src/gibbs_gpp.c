@@ -4,7 +4,7 @@
 #include "common.h"
 #include "mathematics.h"
 #include "randgenerator.h"
-#include "Print.h"
+//#include "Print.h"
 
 
 // with all summary values (mean, variance/sd, low2.5, up97.5)
@@ -332,6 +332,7 @@ void GIBBS_sumpred_gpp(int *aggtype, int *cov, int *spdecay, double *flag,
 // with one phi parameter
 void GIBBS_zfitsum_onephi_gpp(int *cov, int *spdecay, double *flag, int *its, int *burnin,
      int *n, int *m, int *T, int *r, int *rT, int *p, int *N, int *report,
+	 int *ft,
      double *shape_e, double *shape_eta, double *shape_l,  
      double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *mu_beta, double *delta2_beta,
@@ -476,12 +477,27 @@ void GIBBS_zfitsum_onephi_gpp(int *cov, int *spdecay, double *flag, int *its, in
 
 // for pmcc, fitted sum values    
      for(j=0; j < N1; j++){
-         if(i >= brin){  
-          mn_rep[j] += zfit[j];
-          var_rep[j] += zfit[j]*zfit[j];
-         } 
+          if(i >= brin){    
+          // Three options: ft: 0=NONE, 1=SQRT, 2=LOG
+		  if(ft[0]==0){
+              mn_rep[j] += zfit[j];
+              var_rep[j] += zfit[j]*zfit[j];
+		  }
+		  else{
+			  if(ft[0]==1){
+              mn_rep[j] += zfit[j]*zfit[j];
+              var_rep[j] += zfit[j]*zfit[j]*zfit[j]*zfit[j];
+			  }
+			  else{
+              mn_rep[j] += exp(zfit[j]);
+              var_rep[j] += exp(zfit[j])*exp(zfit[j]);
+			  }
+		  }
+          }
      }
 
+	 
+//	 
        ext_sige(phi_etap, phi_eta1);
        ext_sige(nup, nu);       
        ext_sige(sig2ep, sig2e1);

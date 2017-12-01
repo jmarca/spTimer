@@ -8,8 +8,6 @@ This command is useful to assign the initial values of the hyper-parameters of t
 spT.initials(model, sig2eps=0.01, sig2eta=NULL, rho=NULL, beta=NULL, phi=NULL)
 }
 \arguments{
-%spT.initials(model, sig2eps=0.01, sig2eta=NULL, sig2beta=NULL, sig2delta=NULL,
-%   rhotp=NULL, rho=NULL, beta=NULL, phi=NULL)
 \item{model}{The spatio-temporal models, current options are: "GP", "AR", and "GPP".}
 \item{sig2eps}{Initial value for the parameter \eqn{\sigma}^2_\eqn{\epsilon}.}
 \item{sig2eta}{Initial value for the parameter \eqn{\sigma}^2_\eqn{\eta}.}
@@ -30,7 +28,7 @@ Initial values are automatically given if the user does not provide these.
 \code{\link{spT.Gibbs}, \link{predict.spT}, \link{spT.priors}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ## 
 
 initials<-spT.initials(model="GPP", sig2eps=0.01, 
@@ -38,6 +36,6 @@ initials<-spT.initials(model="GPP", sig2eps=0.01,
 initials
 
 ##
-}
+%}
 }
 \keyword{spT}

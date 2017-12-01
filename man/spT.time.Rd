@@ -15,7 +15,7 @@ spT.time(t.series, segments=1)
 \code{\link{spT.Gibbs}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ## 
 
 # Equal length time-series in each of 3 years
@@ -25,6 +25,6 @@ time.data<-spT.time(t.series=365,segments=3)
 time.data<-spT.time(t.series=c(366, 365, 365, 365, 366),segments=5)
 
 ##
-}
+%}
 }
 \keyword{spT}

@@ -17,7 +17,7 @@ spT.decay(distribution=Gamm(a=2,b=1), tuning=NULL, npoints=NULL, value=NULL)
 \code{\link{spT.Gibbs}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ## 
 
 # input for random-walk Metropolis within Gibbs 
@@ -32,6 +32,6 @@ spatial.decay<-spT.decay(distribution=Unif(0.01,0.02),npoints=5)
 spatial.decay<-spT.decay(distribution="FIXED", value=0.01)
 
 ##
-}
+%}
 }
 \keyword{spT}

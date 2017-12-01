@@ -1,7 +1,7 @@
 citHeader("To cite spTimer in publications use:")
 
 year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
-vers <- paste("R package version", meta$Version)
+vers <- paste(" R package version", meta$Version)
 
 citEntry(entry = "Article",
   title        = "{spTimer}: Spatio-Temporal Bayesian Modeling Using {R}",
@@ -15,7 +15,7 @@ citEntry(entry = "Article",
   url          = "http://www.jstatsoft.org/v63/i15",
 
   textVersion  =
-  paste("Bakar, K.S. and Sahu, S.K. (2014).",
+  paste("Bakar, K.S. and Sahu, S.K. (2015).",
         "spTimer: Spatio-Temporal Bayesian Modeling Using R",
         "Journal of Statistical Software, 63(15), 1-32.",
         "URL: http://www.jstatsoft.org/v63/i15/ .")

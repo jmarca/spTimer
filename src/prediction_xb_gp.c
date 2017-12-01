@@ -186,7 +186,7 @@ void z_pr_gp(int *cov, int *nsite, int *n, int *r, int *rT, int *T, int *p,
 }
 
 
-
+/*
 // Iteration and Prediction of O_lt for all sites and all time points "XB"
 // spatial beta
 void z_pr_its_gp_sp(int *cov, int *its, int *nsite, int *n, int *r, int *rT, 
@@ -848,5 +848,6 @@ void z_pr_gp_sptp(int *cov, int *nsite, int *n, int *r, int *rT, int *T, int *p,
     return;
 }
 
+*/
 
 ////////////////////////////// END /////////////////////////////////////////////

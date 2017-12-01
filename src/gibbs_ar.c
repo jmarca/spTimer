@@ -5,7 +5,7 @@
 #include "common.h"
 #include "mathematics.h"
 #include "randgenerator.h"
-#include "Print.h"
+//#include "Print.h"
 
    
 // The programme for GIBBS SAMPLING with XB and missing values
@@ -338,8 +338,8 @@ void GIBBS_sumpred_txt_ar(int *aggtype, double *flag, int *its, int *burnin,
 // The programme for GIBBS SAMPLING with XB and missing values
 void GIBBS_ar(double *flag, int *its, int *burnin,
      int *n, int *T, int *r, int *rT, int *p, int *N, int *report,
-     int *cov, int *spdecay, double *shape_e, double *shape_eta, double *shape_0,  
-     double *phi_a, double *phi_b,
+     int *cov, int *spdecay, int *ft, 
+	 double *shape_e, double *shape_eta, double *shape_0, double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *prior_sig, double *phi, 
      double *tau, double *phis, int *phik, double *d, int *constant, 
      double *sig_e, double *sig_eta, double *sig_0, double *mu_l,  
@@ -475,11 +475,24 @@ void GIBBS_ar(double *flag, int *its, int *burnin,
           if(i >= brin){    
           oo[0] = op[j];
           mvrnormal(constant, oo, sig_e1, constant, ot);  
-          mn_rep[j] += ot[0];
-          var_rep[j] += ot[0]*ot[0];
+          // Three options: ft: 0=NONE, 1=SQRT, 2=LOG
+		  if(ft[0]==0){
+              mn_rep[j] += ot[0];
+              var_rep[j] += ot[0]*ot[0];
+		  }
+		  else{
+			  if(ft[0]==1){
+              mn_rep[j] += ot[0]*ot[0];
+              var_rep[j] += ot[0]*ot[0]*ot[0]*ot[0];
+			  }
+			  else{
+              mn_rep[j] += exp(ot[0]);
+              var_rep[j] += exp(ot[0])*exp(ot[0]);
+			  }
+		  }
           }
      }
-
+	 
 // for missing
      for(j=0; j < N1; j++){
           if (flag[j] == 1.0){

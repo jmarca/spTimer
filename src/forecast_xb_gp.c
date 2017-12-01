@@ -163,6 +163,7 @@ void zlt_fore_gp(int *cov, int *K, int *nsite, int *n, int *r, int *p,
      return;
 }
 
+
 /*
 // for spatially varying beta
 // d is the distance for actual locations n x n

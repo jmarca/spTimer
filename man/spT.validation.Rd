@@ -5,11 +5,12 @@
 The following function is used to validate the predicted observations with the actual values.
 }
 \usage{
-spT.validation(z, zhat)
+spT.validation(z, zhat, names=FALSE)
 }
 \arguments{
 \item{z}{The original values (matrix or vector).}
 \item{zhat}{The predicted values (matrix or vector).}
+\item{names}{Logical, if TRUE then print the names of the validation statistics.}
 }
 \value{
 \item{MSE}{Mean Squared Error.}
@@ -24,7 +25,7 @@ spT.validation(z, zhat)
 \code{\link{spT.pCOVER}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 # Create `x', which is the true values.
@@ -35,6 +36,6 @@ y <- rnorm(10,5,1)
 spT.validation(x, y)
 
 ##
-}
+%}
 }
 \keyword{utility}

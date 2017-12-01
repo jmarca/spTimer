@@ -5,7 +5,7 @@
 spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords, 
            priors=NULL, initials=NULL, nItr, nBurn=0, report=1, 
            tol.dist=2, distance.method="geodetic:km", cov.fnc="exponential",
-           scale.transform="NONE", spatial.decay, X.out=TRUE, Y.out=TRUE)
+           scale.transform="NONE", spatial.decay, fitted.values, X.out=TRUE, Y.out=TRUE)
 {
     start.time<-proc.time()[3]
   # 
@@ -148,6 +148,28 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
     #
          o <- zm[,1]
     #
+	#
+	if(fitted.values=="ORIGINAL"){
+      if(scale.transform=="NONE"){
+         ft <- 0
+      }
+      else if(scale.transform=="SQRT"){
+         ft <- 1
+      }
+      else if(scale.transform=="LOG"){
+         ft <- 2
+      }
+      else{
+         stop("\n Error: scale.transform is not correctly specified \n")
+      }
+	}
+	else if(fitted.values=="TRANSFORMED"){
+        ft <- 0	
+	}
+	else{
+         stop("\n Error: fitted.values option is not correctly specified \n")
+	}
+	#
     #
     if(spatial.decay$type=="FIXED"){
          spdecay <- 1
@@ -202,7 +224,8 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
       out<-.C('GIBBS_ar',as.double(flag[,2]),as.integer(nItr), 
            as.integer(nBurn), as.integer(n),as.integer(T),as.integer(r),
            as.integer(rT),as.integer(p),as.integer(N),as.integer(report),
-           as.integer(cov),as.integer(spdecay),as.double(shape_e),
+           as.integer(cov),as.integer(spdecay), as.integer(ft),
+		   as.double(shape_e),
            as.double(shape_eta),as.double(shape_0),
 		   as.double(phi_a),as.double(phi_b),
 		   as.double(priors$prior_a),as.double(priors$prior_b),
@@ -215,7 +238,7 @@ spAR.Gibbs<-function(formula, data=parent.frame(), time.data, coords,
            phip=double(nItr),accept=double(1),nup=double(nItr),sig_ep=double(nItr),sig_etap=double(nItr), 
            rhop=double(nItr),betap=matrix(double(nItr*p),p,nItr),mu_lp=matrix(double(r*nItr),r,nItr),
            sig_l0p=matrix(double(r*nItr),r,nItr),op=matrix(double(nItr*N),N,nItr),wp=matrix(double(nItr*N),N,nItr),
-           fit=matrix(double(2*N),N,2),gof=double(1),penalty=double(1))[36:49]
+           fit=matrix(double(2*N),N,2),gof=double(1),penalty=double(1))[37:50]
     }
     else{
          stop("\n#\n## Error: \n#")

@@ -1,9 +1,9 @@
-
-useDynLib(spTimer)
-exportPattern("^[^\\.]")
+useDynLib(spTimer, .registration = TRUE)
+#useDynLib(spTimer, .registration = TRUE, .fixes = "C_")
 
 import(coda)
 import(sp)
+import(spacetime)
 
 importFrom("grDevices", "dev.new")
 importFrom("graphics", "abline", "legend", "par", "points", "segments",
@@ -14,11 +14,16 @@ importFrom("stats", "acf", "as.formula", "contrasts", "density",
      "na.pass", "pacf", "qqline", "qqnorm", "quantile", "sd",
      "terms", "terms.formula", "ts")
 importFrom("utils", "read.table")
+importFrom("stats", "rnorm")
+importFrom("stats", "rgamma")
+
 
 S3method(print,spT)
 S3method(print,spTpred)
 S3method(print,spTfore)
+
 S3method(predict,spT)
+
 S3method(summary,spT)
 S3method(plot,spT)
 S3method(coef,spT)
@@ -32,9 +37,38 @@ S3method(confint,spT)
 S3method(fitted,spT)
 S3method(formula,spT)
 
+exportClasses("spT")
 
-
-#exportClasses("spT")
-#export(
-#       "Formula.matrix",
-#       "Formula.matrix",)
+export(
+       "spT.Gibbs",
+       "spT.decay",
+       "spT.priors",
+       "spT.time",
+       "spT.initials",
+       "predict.spT",
+       "plot.spT",
+       "summary.spT",
+       "spT.geodist",
+	   "spT.geo.dist",
+	   "spT.geo_dist",
+       "spT.segment.plot",
+       "spT.subset",
+       "spT.grid.coords",
+       "spT.pCOVER",
+       "spT.validation",
+       "Formula.matrix",
+       "Formula.coords",
+       "as.mcmc.spT",
+       "as.forecast.object",
+       "confint.spT",
+	   "coef.spT",
+	   "residuals.spT",
+	   "print.spT",
+       "fitted.spT",
+       "formula.spT",
+	   "model.frame.spT",
+	   "model.matrix.spT",
+       "Gamm",
+       "Norm",
+       "Unif" 
+)

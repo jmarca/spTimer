@@ -33,7 +33,7 @@ NYgrid: This dataset contains total 6200 rows for 62 days of observations for 10
 \code{\link{NYgrid}, \link{spT.Gibbs}, \link{spT.subset}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
   library("spTimer")
 # NY data
@@ -43,20 +43,21 @@ NYgrid: This dataset contains total 6200 rows for 62 days of observations for 10
   NYsite<-unique(cbind(NYdata[,1:3]))
   head(NYsite)
 # map
-  library(maps)
-  map(database="state",regions="new york")
-  points(NYsite[,2:3],pch=19)
+  #library(maps)
+  #map(database="state",regions="new york")
+  #points(NYsite[,2:3],pch=19)
 
   # Grid data
   data(NYgrid)
   head(NYgrid)
   grid.coords<-unique(cbind(NYgrid[,8:9]))
-  library(maps)
+  #library(maps)
   plot(grid.coords,pch=19,col=1)
-  map(database="state",regions="new york",add=TRUE)
+  #map(database="state",regions="new york",add=TRUE)
 
 ##
-}}
+%}
+}
 \source{US EPA}
 %\references{
 %http://www.epa.gov/

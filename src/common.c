@@ -4,7 +4,8 @@
 #include "math.h"
 #include "mathematics.h"
 #include "randgenerator.h"
-#include "Print.h"
+//#include "Print.h"
+
 
 
 // ratio function for the phi sample
@@ -72,13 +73,11 @@ void GP_para_printR (int i, int iteration, int report, int p, double accept,
     sig2e1 = *sig2e;
     sig2eta1 = *sig2eta;
 
-//    x =  (iteration/report); 
-//    fractional = modf(x, &intpart);
-
+    double num =  (iteration/report); 
+    int intpart = (int)num;
+  
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-//    if(i==((j+1)-1)){	
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -107,12 +106,11 @@ void GP_para_printRnu (int i, int iteration, int report, int p, double accept,
     sig2e1 = *sig2e;
     sig2eta1 = *sig2eta;
 
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -141,12 +139,11 @@ void GPsp_para_printR (int i, int iteration, int report, int p, double accept,
     sig2eta1 = *sig2eta;
     sig2beta1 = *sig2beta;    
 
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -181,12 +178,11 @@ void GPsp_para_printRnu (int i, int iteration, int report, int p, double accept,
     sig2eta1 = *sig2eta;
     sig2beta1 = *sig2beta;
 
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -220,12 +216,11 @@ void GPtp_para_printR (int i, int iteration, int report, int p, int u, double ac
     sig2delta1 = *sig2delta;    
     sig201 = *sig20;    
     
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -265,12 +260,11 @@ void GPtp_para_printRnu (int i, int iteration, int report, int p, int u, double 
     sig2delta1 = *sig2delta;    
     sig201 = *sig20;    
 
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -311,12 +305,11 @@ void GPsptp_para_printR (int i, int iteration, int report, int p, int u, double 
     sig2delta1 = *sig2delta;    
     sig201 = *sig20;    
     
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -357,12 +350,11 @@ void GPsptp_para_printRnu (int i, int iteration, int report, int p, int u, doubl
     sig2delta1 = *sig2delta;    
     sig201 = *sig20;    
 
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -402,12 +394,11 @@ void GPPsp_para_printRnu (int i, int iteration, int report, int p, double accept
     sig2eta1 = *sig2eta;
     sig2beta1 = *sig2beta;
 
-//    x =  (iteration/report); 
-    //fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -438,12 +429,11 @@ void GPPsp_para_printR (int i, int iteration, int report, int p, double accept,
     sig2eta1 = *sig2eta;
     sig2beta1 = *sig2beta;
 
-//    x =  (iteration/report); 
-//    fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
   	  ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -474,12 +464,11 @@ void para_printR (int i, int iteration, int report, int p, double accept,
     sig2e1 = *sig2e;
     sig2eta1 = *sig2eta;
 
-//    x =  (iteration/report); 
-//    fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -508,12 +497,11 @@ void para_printRnu (int i, int iteration, int report, int p, double accept,
     sig2e1 = *sig2e;
     sig2eta1 = *sig2eta;
 
-//    x =  (iteration/report); 
-//    fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 
@@ -539,12 +527,11 @@ void para_print_spTR (int i, int iteration, int report, int p, double accept,
     sig2e1 = *sig2e;
     sig2eta1 = *sig2eta;
 
-//    x =  (iteration/report); 
-//    fractional = modf(x, &intpart);
+    double num =  (iteration/report); 
+    int intpart = (int)num;
 
     for(j=0; j<report; j++){
-//    if(i==(intpart*(j+1)-1)){
-    if(i==((iteration/report)*(j+1)-1)){	
+    if(i==(intpart*(j+1)-1)){
       ii = (double) i;
       Rprintf("---------------------------------------------------------------\n");
       Rprintf(" Sampled: %i of %i, %3.2f%%.\n Batch Acceptance Rate (phi): %3.2f%%\n", 

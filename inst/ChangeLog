@@ -1,3 +1,16 @@
+2017-10-19
+
+	* Version 3.0-1
+	* Bugs fixed: Truncated GPP model with spatial and temporal predictions.
+	* Example files are updated. 
+	
+2017-10-15
+
+	* Version 3.0-0
+	* Added truncated/censored (only left-sided) Gaussian approach for GP and GPP models with spatial and temporal predictions.
+	* Created an option that will return the fitted values and sd on the original scale. Use fitted.values="ORIGINAL" to get it.
+    * Added more flexibility for chosing hyper-parameters of the prior distributions for each coefficients of the model.          
+
 2015-08-19
 
 	* Version 2.0-1
@@ -46,4 +59,3 @@
 
 	* Version 0.7
 	* Added forecast class.
-

@@ -5,14 +5,15 @@
 This function is used to obtain MCMC summary statistics.
 }
 \usage{
-\method{summary}{spT}(object, digits=4, package="spTimer", ...)
+\method{summary}{spT}(object, digits=4, package="spTimer", coefficient=NULL, ...)
 
 ## 
 }
 \arguments{
 \item{object}{Object of class inheriting from "spT".}
 \item{digits}{Rounds the specified number of decimal places (default 4).}
-\item{package}{If "coda" then summary statistics are given using coda package. Defaults value is "spTimer".}
+\item{package}{If "coda" then summary statistics are given using coda package. Defaults value is "spTimer". One can also use "spTDyn" for obtaining spatially varying and temporal dynamic models (see details: https://cran.r-project.org/web/packages/spTDyn/index.html)}
+\item{coefficient}{Only applicable for package "spTDyn".}
 \item{...}{Other arguments.}
 }
 \value{

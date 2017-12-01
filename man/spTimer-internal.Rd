@@ -61,6 +61,11 @@
 %\alias{spT.keep.morethan.dist}
 %\alias{summary.spT}
 %\alias{plot.spT}
+\alias{sptruncGP.Gibbs}
+\alias{sptruncGPP.Gibbs}
+\alias{truncated.fnc}
+\alias{prob.below.threshold}
+\alias{reverse.truncated.fnc}
 \description{Internal spTimer functions}
 \keyword{internal}
 

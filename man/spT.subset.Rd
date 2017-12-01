@@ -17,7 +17,7 @@ spT.subset(data, var.name, s = NULL, reverse = FALSE)
 \code{\link{NYdata}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 # Load ozone concentration data for New York.
@@ -29,6 +29,6 @@ subdata<-spT.subset(data=NYdata, var.name=c("s.index"), s=c(2,8,12))
 subdata<-spT.subset(data=NYdata, var.name=c("s.index"), s=c(2,8,12), reverse=TRUE)
    
 ##
-}
+%}
 }
 \keyword{utility}

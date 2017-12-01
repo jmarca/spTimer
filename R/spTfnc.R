@@ -5,7 +5,7 @@ spT.priors<-function(model="GP",inv.var.prior=Gamm(a = 2,b = 1),
            beta.prior=Norm(0,10^10), rho.prior=Norm(0,10^10))
 {
    #
-   if(model=="GP"){
+   if(model=="GP" | model=="truncatedGP"){
      #
      if(is.na(inv.var.prior[,1])){
        prior_a<-NULL
@@ -65,7 +65,7 @@ spT.priors<-function(model="GP",inv.var.prior=Gamm(a = 2,b = 1),
      #
    }
    #
-   else if(model=="AR"){
+   else if(model=="AR" | model=="truncatedAR"){
      #
      if(is.na(inv.var.prior[,1])){
        prior_a<-NULL
@@ -120,7 +120,7 @@ spT.priors<-function(model="GP",inv.var.prior=Gamm(a = 2,b = 1),
      #
    }
    #
-   else if(model=="GPP"){
+   else if(model=="GPP" | model=="truncatedGPP"){
      #
      if(is.na(inv.var.prior[,1])){
        prior_a<-NULL
@@ -206,7 +206,7 @@ spT.initials<-function(model="GP", sig2eps=0.01, sig2eta=NULL,
    #}
    #
    #
-   if(model=="GP"){
+   if(model=="GP" | model=="truncatedGP"){
    ##
    ## Initial values for the GPP models
    ##
@@ -223,7 +223,7 @@ spT.initials<-function(model="GP", sig2eps=0.01, sig2eta=NULL,
       initials.gp(phi,sig2eps,sig2eta,beta)
   }
    #
-   else if(model=="AR"){
+   else if(model=="AR" | model=="truncatedAR"){
    ##
    ## Initial values for the AR models
    ##
@@ -241,7 +241,7 @@ spT.initials<-function(model="GP", sig2eps=0.01, sig2eta=NULL,
       rho,beta,mu_l=NULL)
    }
    #
-   else if(model=="GPP"){
+   else if(model=="GPP" | model=="truncatedGPP"){
    ##
    ## Initial values for the GPP models
    ##
@@ -334,7 +334,8 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
          tol.dist=0.05, distance.method="geodetic:km", 
          cov.fnc="exponential", scale.transform="NONE", 
          spatial.decay=spT.decay(distribution="FIXED"),
-         annual.aggrn="NONE")
+		 truncation.para=list(at=0,lambda=2),
+         annual.aggrn="NONE",fitted.values="TRANSFORMED")
 {
    ## check for spacetime class
    if(class(data) %in% c("STFDF","STSDF","STIDF","SpatialPointsDataFrame")){
@@ -404,11 +405,18 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
     stop("\n# Error: correctly define scale.transform \n")
    }
    #
+   if(!fitted.values %in% c("ORIGINAL","TRANSFORMED")){
+    stop("\n# Error: correctly define fitted.values \n")
+   }
+   #
    if(!spatial.decay$type %in% c("FIXED", "DISCRETE", "MH")){
     stop("\n# Error: correctly define spatial.decay \n")
    }
    #
-   if(!model %in% c("GP", "AR", "GPP")){
+   if(model %in% c("truncatedAR")){
+    stop("\n# Currently under constructions \n")
+   }
+   if(!model %in% c("GP", "AR", "GPP", "truncatedGP", "truncatedGPP")){
     stop("\n# Error: correctly define model \n")
    }
    #
@@ -430,7 +438,7 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
       out<- spGP.Gibbs(formula=formula, data=data, time.data=time.data, coords=coords, 
             priors=priors, initials=initials, nItr=nItr, nBurn=nBurn, report=report, tol.dist=tol.dist,   
             distance.method=distance.method, cov.fnc=cov.fnc, scale.transform=scale.transform, spatial.decay=spatial.decay,
-            X.out=TRUE, Y.out=TRUE)
+            fitted.values=fitted.values, X.out=TRUE, Y.out=TRUE)
       out$combined.fit.pred<-FALSE
       out$model<-model
       out$parameter<-stat.sum(out, cov.fnc=cov.fnc)
@@ -453,7 +461,7 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
       out<- spAR.Gibbs(formula=formula, data=data, time.data=time.data, coords=coords, 
             priors=priors, initials=initials, nItr=nItr, nBurn=nBurn, report=report, tol.dist=tol.dist,   
             distance.method=distance.method, cov.fnc=cov.fnc, scale.transform=scale.transform, spatial.decay=spatial.decay,
-            X.out=TRUE, Y.out=TRUE)
+            fitted.values=fitted.values, X.out=TRUE, Y.out=TRUE)
       out$combined.fit.pred<-FALSE
       out$model<-model
       out$parameter<-stat.sum(out, cov.fnc=cov.fnc)
@@ -478,7 +486,61 @@ spT.Gibbs<-function(formula, data=parent.frame(), model="GP",
             nItr=nItr, nBurn=nBurn, report=report, tol.dist=tol.dist, 
             distance.method=distance.method, cov.fnc=cov.fnc,
             scale.transform=scale.transform, spatial.decay=spatial.decay, 
-            X.out=TRUE, Y.out=TRUE)
+            fitted.values=fitted.values, X.out=TRUE, Y.out=TRUE)
+      out$combined.fit.pred<-FALSE
+      out$model<-model
+      out$parameter<-stat.sum(out, cov.fnc=cov.fnc)
+      out$data<-data
+      class(out)<-"spT"
+      out
+   }
+   #
+   else if(model=="truncatedGP"){
+      cat("\n Output: Truncated GP models \n")
+      if(class(priors) != "spGP" & class(priors) != "NULL"){
+        stop("\n# Error: correctly define the GP or truncated GP models for function spT.priors.")
+      }
+      if(class(initials) != "spGP" & class(initials) != "NULL"){
+        stop("\n# Error: correctly define the GP or truncated GP models for function spT.initials.")
+      }
+      if(!missing(knots.coords)){
+        stop("\n# Error: please check options for the GP or truncated GP model and/or knots.coords \n")
+      }
+	  if(!is.list(truncation.para)){
+        stop("\n# Error: truncation parameter should be a list. \n")
+	  }
+	  out <- sptruncGP.Gibbs(formula=formula, data=data, time.data=time.data, coords=coords,
+           priors=priors, initials=initials, nItr=nItr, nBurn=nBurn, report=report, 
+           tol.dist=tol.dist, distance.method=distance.method, cov.fnc=cov.fnc,
+           scale.transform=scale.transform, spatial.decay=spatial.decay, 
+		   truncation.para=truncation.para, 
+		   fitted.values=fitted.values, X.out=TRUE, Y.out=TRUE)
+      out$combined.fit.pred<-FALSE
+      out$model<-model
+      out$parameter<-stat.sum(out, cov.fnc=cov.fnc)
+      out$data<-data
+      class(out)<-"spT"
+      out
+   }
+   #
+   else if(model=="truncatedGPP"){
+      cat("\n Output: Truncated GPP approximation models \n")
+      if(missing(knots.coords)){
+        stop("\n# Error: define knots.coords \n")
+      }
+      if(class(priors) != "spGPP" & class(priors) != "NULL"){
+        stop("\n# Error: correctly define the GPP models for function spT.priors.")
+      }
+      if(class(initials) != "spGPP" & class(initials) != "NULL"){
+        stop("\n# Error: correctly define the GPP models for function spT.initials.")
+      }
+      out<- sptruncGPP.Gibbs(formula=formula, data=data, time.data=time.data, 
+            knots.coords=knots.coords, coords=coords, priors=priors, initials=initials, 
+            nItr=nItr, nBurn=nBurn, report=report, tol.dist=tol.dist, 
+            distance.method=distance.method, cov.fnc=cov.fnc,
+            scale.transform=scale.transform, spatial.decay=spatial.decay, 
+            truncation.para=truncation.para, 
+			fitted.values=fitted.values, X.out=TRUE, Y.out=TRUE)
       out$combined.fit.pred<-FALSE
       out$model<-model
       out$parameter<-stat.sum(out, cov.fnc=cov.fnc)
@@ -576,12 +638,20 @@ spT.prediction<-function(nBurn=0, pred.data=NULL, pred.coords,
    #
    model<-posteriors$model
    #
-   if(!model %in% c("GP", "AR", "GPP")){
+   if(!model %in% c("GP", "AR", "GPP", "truncatedGP", "truncatedGPP")){
     stop("\n# Error: model is not correctly defined \n")
    }
    #
    else if(model=="GP"){
       cat("\n Prediction: GP models \n")
+      out<-spGP.prediction(nBurn=nBurn, pred.data=pred.data, pred.coords=pred.coords, 
+           posteriors=posteriors, tol.dist=tol.dist, Summary=Summary)
+      out$model<-model
+      #class(out)<-"spTprd"
+      out
+   }
+   else if(model=="truncatedGP"){
+      cat("\n Prediction: Truncated GP models \n")
       out<-spGP.prediction(nBurn=nBurn, pred.data=pred.data, pred.coords=pred.coords, 
            posteriors=posteriors, tol.dist=tol.dist, Summary=Summary)
       out$model<-model
@@ -598,6 +668,14 @@ spT.prediction<-function(nBurn=0, pred.data=NULL, pred.coords,
    }
    else if(model=="GPP"){
       cat("\n Prediction: GPP models \n")
+      out<-spGPP.prediction(nBurn=nBurn, pred.data=pred.data, pred.coords=pred.coords, 
+           posteriors=posteriors, tol.dist=tol.dist, Summary=Summary)
+      out$model<-model
+      #class(out)<-"spTprd"
+      out
+   }
+   else if(model=="truncatedGPP"){
+      cat("\n Prediction: Truncated GPP models \n")
       out<-spGPP.prediction(nBurn=nBurn, pred.data=pred.data, pred.coords=pred.coords, 
            posteriors=posteriors, tol.dist=tol.dist, Summary=Summary)
       out$model<-model
@@ -630,12 +708,22 @@ spT.forecast<-function(nBurn=0, K=1, fore.data=NULL, fore.coords,
    #
    model<-posteriors$model
    #
-   if(!model %in% c("GP", "AR", "GPP")){
+   if(!model %in% c("GP", "AR", "GPP", "truncatedGP", "truncatedGPP")){
     stop("\n# Error: model is not correctly defined \n")
    }
    #
    else if(model=="GP"){
       cat("\n Forecast: GP models \n")
+      out<-spGP.forecast(nBurn=nBurn, K=K, fore.data=fore.data,
+           fore.coords=fore.coords, posteriors=posteriors, 
+           tol.dist=tol.dist, Summary=Summary)
+      out$model<-model
+      class(out)<-"spTfore"
+      out
+   }
+   #
+   else if(model=="truncatedGP"){
+      cat("\n Forecast: Truncated GP models \n")
       out<-spGP.forecast(nBurn=nBurn, K=K, fore.data=fore.data,
            fore.coords=fore.coords, posteriors=posteriors, 
            tol.dist=tol.dist, Summary=Summary)
@@ -659,6 +747,15 @@ spT.forecast<-function(nBurn=0, K=1, fore.data=NULL, fore.coords,
    #
    else if(model=="GPP"){
       cat("\n Forecast: GPP models \n")
+      out<-spGPP.forecast(nBurn=nBurn, K=K, fore.data=fore.data, fore.coords=fore.coords, 
+           posteriors=posteriors, tol.dist=tol.dist, Summary=Summary)
+      out$model<-model
+      class(out)<-"spTfore"
+      out
+   }
+   #
+   else if(model=="truncatedGPP"){
+      cat("\n Forecast: Truncated GPP models \n")
       out<-spGPP.forecast(nBurn=nBurn, K=K, fore.data=fore.data, fore.coords=fore.coords, 
            posteriors=posteriors, tol.dist=tol.dist, Summary=Summary)
       out$model<-model
@@ -894,7 +991,7 @@ print.spTpred<-function(x, ...) {
      if(is.null(model)==TRUE){
       stop("\n# Error: need to define the model")
      }
-     else if(model=="AR"){
+     else if(model=="AR" | model == "truncatedAR"){
         if(nItr <= nBurn){
               stop("\n# Error: iteration (",nItr,") is less than or equal to nBurn (",nBurn,") \n")
         }
@@ -920,7 +1017,7 @@ print.spTpred<-function(x, ...) {
         }
         para
      }
-     else if(model == "GPP"){
+     else if(model == "GPP" | model == "truncatedGPP"){
         if(nItr <= nBurn){
               stop("\n# Error: iteration (",nItr,") is less than or equal to nBurn (",nBurn,") \n")
         }
@@ -970,7 +1067,7 @@ print.spTpred<-function(x, ...) {
         }
         para
      }   
-     else if(model == "GP"){
+     else if(model == "GP" | model == "truncatedGP"){
         if(nItr <= nBurn){
            stop("\n# Error: iteration (",nItr,") is less than or equal to nBurn (",nBurn,") \n")
         }

@@ -952,7 +952,7 @@ spT.check.sites.inside<-function(coords, method, tol=0.1){
 ##
 ## validation criteria
 ##
-spT.validation <- function(z, zhat)
+spT.validation <- function(z, zhat, names=FALSE)
 {
  ##
  ## Validation Mean Squared Error (VMSE) 
@@ -1035,7 +1035,9 @@ spT.validation <- function(z, zhat)
     round(sum(u^2)/sum(v^2), 4)
  }
  ##
+ if(names==TRUE){
  cat("##\n Mean Squared Error (MSE) \n Root Mean Squared Error (RMSE) \n Mean Absolute Error (MAE) \n Mean Absolute Percentage Error (MAPE) \n Bias (BIAS) \n Relative Bias (rBIAS) \n Relative Mean Separation (rMSEP)\n##\n") 
+ }
  ##
    out<-NULL
    out$MSE<-VMSE(c(z), c(zhat))
@@ -1046,6 +1048,7 @@ spT.validation <- function(z, zhat)
    out$rBIAS<-rBIAS(c(z), c(zhat))
    out$rMSEP<-rMSEP(c(z), c(zhat))
    unlist(out)
+  
 }
 ##
 ## MCMC plots for individual values (trace, density, acf)
@@ -1128,7 +1131,7 @@ as.mcmc.spT<-function(x, ...){
     if (is.null(model) == TRUE) {
         stop("\n# Error: need to define the model")
     }
-    else if (model == "AR") {
+    else if (model == "AR" | model == "truncatedAR") {
         r <- x$r
         p <- x$p
       #          
@@ -1145,7 +1148,7 @@ as.mcmc.spT<-function(x, ...){
         para<-mcmc(para)
         para
     }
-    else if (model == "GPP") {
+    else if (model == "GPP" | model == "truncatedGPP") {
         r <- x$r
         p <- x$p
       #          
@@ -1174,7 +1177,7 @@ as.mcmc.spT<-function(x, ...){
         para<-mcmc(para)
         para
     }
-    else if (model == "GP") {
+    else if (model == "GP" | model == "truncatedGP") {
         r <- x$r
         p <- x$p
       #          
@@ -1276,8 +1279,8 @@ tp.dimname.fnc<-function(x,names,u,T){
 ##
 ## use of summary
 ##
-summary.spT<-function(object, digits=4, package="spTimer", ...){
-   coefficient=NULL
+summary.spT<-function(object, digits=4, package="spTimer", coefficient=NULL, ...){
+   #
    if(package=="coda"){
     if(object$combined.fit.pred==TRUE){
       stop("\n# Error: coda package is not useful for output with combined fit and predict \n")
@@ -1318,6 +1321,17 @@ summary.spT<-function(object, digits=4, package="spTimer", ...){
     }
    }
    else{
+     if(package=="spTDyn"){
+      coefficient <- coefficient
+     }
+     #
+     else if("Xsp"%in%names(object) | "Xtp"%in%names(object)){
+      coefficient <- coefficient   
+     }
+	 else{
+	   coefficient <- NULL
+	 }
+     #
      if(is.null(coefficient)){
        if((!is.null(object$sp.covariate.names)) & (!is.null(object$tp.covariate.names))){cat("\n## \n# Spatially and temporally varying parameters are not included.\n##\n ")}
        else if((!is.null(object$sp.covariate.names)) & (is.null(object$tp.covariate.names))) {cat("\n## \n# Spatially varying parameters are not included.\n##\n ")}
@@ -1356,15 +1370,14 @@ summary.spT<-function(object, digits=4, package="spTimer", ...){
        summary(tmp, ...)
      }
      else{
-       stop("Error: the argument coefficient only takes charecter 'spatial' and 'temporal'.")
+       stop("Error: the argument coefficient only takes character 'spatial' and 'temporal'.")
      }
    }
 }
 ##
 ## use of plot
 ##
-plot.spT<-function(x, residuals=FALSE, ...){
-   coefficient=NULL 
+plot.spT<-function(x, residuals=FALSE, coefficient=NULL, ...){
    if(as.logical(residuals)==FALSE){
      if(x$combined.fit.pred==TRUE){
        if(!is.null(x$sp.covariate.names)) {cat("## \n# Spatially varying parameters are not included.\n##\n ")}
@@ -1714,6 +1727,66 @@ Unif<-function(low=NA,up=NA){
    out<-matrix(c(low,up),1,2)
    class(out)<-"Uniform"
    out
+}
+##
+## Truncated Gaussian code
+##
+truncated.fnc<-function(Y, at=0, lambda=NULL, both=FALSE){
+   #
+   #
+   # at is left-tailed
+   #
+      if(is.null(lambda)){
+	    stop("Error: define truncation parameter lambda properly using list ")
+	  }
+      if(is.null(at)){
+	    stop("Error: define truncation point properly using list ")
+	  }
+	  if(at < 0){
+	    stop("Error: currently truncation point only can take value >= zero ")
+	  }
+	  zm <- cbind(Y,Y-at,1)
+	  zm[zm[, 2] <= 0, 3] <- 0
+      zm[, 2] <- zm[, 2]^(1/lambda)
+	  zm[zm[, 3] == 0, 2] <- -(rgamma(nrow(zm[zm[,3]==0,]), shape=1, rate=1/(range(zm[zm[,3]==1,2],na.rm=TRUE)[[2]]/4.1)))
+	  #-(rexp(nrow(zm[zm[,3]==0,])*10, rate=1/(range(zm[zm[,3]==1,2],na.rm=TRUE)[[2]]/4.1)))
+	  # scale it 
+	  
+	  #
+      if (both == TRUE) {
+        zm
+      }
+      else {
+        c(zm[,2])
+      }
+    #
+}
+##
+## for truncated model
+##
+reverse.truncated.fnc<-function(Y, at=0, lambda=NULL){
+   #
+   # at is left-tailed
+   #
+      if(is.null(lambda)){
+	    stop("Error: define truncation parameter lambda properly using list ")
+	  }
+      zm <- Y
+      zm[zm <= 0]<- 0
+	  zm <- zm^(lambda)
+	  zm <- zm + at
+	  zm
+    #
+}
+##
+## probability below threshold (for truncated)
+##
+prob.below.threshold <- function(out, at){
+   # out is the N x nItr MCMC samples
+   fnc<-function(x, at){
+     length(x[x <= at])/length(x)
+   }   
+   apply(out,1,fnc,at=at)
 }
 ##
 ##

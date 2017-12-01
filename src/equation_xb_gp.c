@@ -75,10 +75,10 @@ void JOINT_gp(int *n, int *T, int *r, int *rT, int *p, int *N,
       if(phi[0] <= 0){
         phi[0] = pow(1,-320);
       }      
-      tmp[0] = log(phi[0]); 
+      tmp[0] = -log(phi[0]); 
 // Rprintf("   phi: %4.4f, tmp: %4.4f, cov: %i\n", phi[0], tmp[0], cov[0]);      
       mvrnormal(constant, tmp, tau, constant, phi2);
-      phi2[0]= exp(phi2[0]);      
+      phi2[0]= exp(-phi2[0]);      
 // Rprintf("   phi: %4.4f, tmp: %4.4f, cov: %i\n", phi[0], tmp[0], cov[0]);      
       covFormat(cov, n, phi2, nup, d, sig_eta, S, det2, Sinv, Qeta2);   
 // Rprintf("   phi: %4.4f, phi2: %4.4f, cov: %i\n", phi[0], phi2[0], cov[0]);
@@ -107,7 +107,7 @@ void JOINT_gp(int *n, int *T, int *r, int *rT, int *p, int *N,
    return;
 }
 
-
+/*
 // Joint posterior distribution for temporal and spatial beta (dyn)
 void JOINTsptp_gp(int *intercept, int *n, int *T, int *r, int *rT, int *p, int *q, int *u, int *N, 
      int *cov, int *spdecay, int *rhocheck,
@@ -204,9 +204,9 @@ void JOINTsptp_gp(int *intercept, int *n, int *T, int *r, int *rT, int *p, int *
       if(phi[0] <= 0){
         phi[0] = pow(1,-320);
       }      
-      tmp[0] = log(phi[0]); 
+      tmp[0] = -log(phi[0]); 
       mvrnormal(constant, tmp, tau, constant, phi2);
-      phi2[0]= exp(phi2[0]);      
+      phi2[0]= exp(-phi2[0]);      
       covFormat(cov, n, phi2, nup, d, sig_eta, S, det2, Sinv, Qeta2);   
 //     randow-walk M  
 
@@ -391,9 +391,9 @@ void JOINTtp_gp(int *intercept, int *n, int *T, int *r, int *rT, int *p, int *u,
       if(phi[0] <= 0){
         phi[0] = pow(1,-320);
       }      
-      tmp[0] = log(phi[0]); 
+      tmp[0] = -log(phi[0]); 
       mvrnormal(constant, tmp, tau, constant, phi2);
-      phi2[0]= exp(phi2[0]);      
+      phi2[0]= exp(-phi2[0]);      
       covFormat(cov, n, phi2, nup, d, sig_eta, S, det2, Sinv, Qeta2);   
 //     randow-walk M  
      phi_gp_MH_sptp(Qeta, Qeta2, det, det2, phi, phi2, n, r, T, rT, N, 
@@ -592,20 +592,21 @@ void JOINTsp_gp(int *intercept, int *n, int *T, int *r, int *rT, int *p, int *q,
 //   shape_beta[0] = (n[0]*q[0])/2.0 + prior_a[0];
    sig_beta_gp_sp(n, q, shape_beta, prior_b, betasp, Sinv, constant, sig_betasp);
 
-/*
-  int i; 
-  for(i=0; i< *N; i++){
-     Rprintf("   z: %4.4f, o: %4.4f, \n", z[i], o[i]);      
-  }
-   
-  int i; 
-  for(i=0; i< *N; i++){
-     Rprintf("   XB: %4.4f, \n", XB[i]);      
-  }
-*/
+
+//  int i; 
+//  for(i=0; i< *N; i++){
+//     Rprintf("   z: %4.4f, o: %4.4f, \n", z[i], o[i]);      
+//  }
+//   
+//  int i; 
+//  for(i=0; i< *N; i++){
+//     Rprintf("   XB: %4.4f, \n", XB[i]);      
+//  }
+
    free(Qeta); free(XB); free(Sinv); free(det); free(S); 
    return;
 }
+*/
 
 
 // Posterior distribution for "sig_e"
@@ -663,6 +664,7 @@ void sig_e_gp(int *n, int *r, int *T, int *rT, int *N, double *shape,
      return;                  
 }     
 
+/*
 // Posterior distribution for "sig_e"
 // for sp tp model
 void sig_e_gp_sptp(int *n, int *r, int *T, int *rT, int *N, double *shape, 
@@ -709,7 +711,7 @@ void sig_e_gp_sptp(int *n, int *r, int *T, int *rT, int *N, double *shape,
      free(z1); free(o1); free(zo); free(zzoo); free(tmp);
      return;                  
 }     
-
+*/
 
 // Posterior distribution for "sig_eta"
 void sig_eta_gp(int *n, int *r,  int *T, int *rT, double *shape, 
@@ -762,7 +764,7 @@ void sig_eta_gp(int *n, int *r,  int *T, int *rT, double *shape,
      return;
 }
 
-
+/*
 // Posterior distribution for "sig_eta"
 // for sp tp model
 void sig_eta_gp_sptp(int *n, int *r,  int *T, int *rT, double *shape, 
@@ -1354,6 +1356,8 @@ void beta_gp_for_sp(int *n, int *r, int *T, int *rT, int *p, double *prior_mu,
      return;
 }     
 
+*/
+
 // Posterior distribution for "beta" not spatial
 void beta_gp(int *n, int *r, int *T, int *rT, int *p, double *prior_mu,
      double *prior_sig, double *Qeta, double *X, double *o, int *constant, 
@@ -1436,7 +1440,6 @@ void beta_gp(int *n, int *r, int *T, int *rT, int *p, double *prior_mu,
 }     
 
 
-
 // conditional posterior for o_lt
 void o_gp(int *n, int *r, int *T, int *rT, double *prior_omu,
      double *prior_osig, double *sig_e, double *sig_eta, double *S, 
@@ -1510,6 +1513,8 @@ void o_gp(int *n, int *r, int *T, int *rT, double *prior_omu,
 
 
 
+/*
+
 // conditional posterior for o_lt
 // for sp tp model
 void o_gp_sptp(int *n, int *r, int *T, int *rT, double *prior_omu,
@@ -1572,6 +1577,8 @@ void o_gp_sptp(int *n, int *r, int *T, int *rT, double *prior_omu,
 
      return;
 } 
+*/
+
 
 // Rnadom-walk metropolis for phi
 void phi_gp_MH(double *Qeta1, double *Qeta2, double *det1, double *det2,
@@ -1671,6 +1678,7 @@ void phi_gp_MH(double *Qeta1, double *Qeta2, double *det1, double *det2,
 }     
 
 
+/*
 // Rnadom-walk metropolis for phi
 // for sp tp model
 void phi_gp_MH_sptp(double *Qeta1, double *Qeta2, double *det1, double *det2,
@@ -1679,13 +1687,13 @@ void phi_gp_MH_sptp(double *Qeta1, double *Qeta2, double *det1, double *det2,
      double *accept, double *phip)
 {
      
-     int row, col, l, i, j, r1, N1, rT1, T1;
+     int row, col, l, i, j, r1, rT1, T1;
      row = *n;
      col = *constant;
      r1 = *r;
      T1 =*T;
      rT1 = *rT;
-     N1 = row*rT1;
+//     N1 = row*rT1;
      
      double *ov, *o1, *XB1, *ratio, *U; 
      o1 = (double *) malloc((size_t)((row*col)*sizeof(double)));
@@ -1737,14 +1745,15 @@ void phi_gp_MH_sptp(double *Qeta1, double *Qeta2, double *det1, double *det2,
           phip[0] = phi1[0];
           accept[0] = 0.0;
      }
-     //else if(phi2[0] > 0.9999){
-     //     phip[0] = phi1[0];
-     //     accept[0] = 0.0;
-     //}
+     else if(phi2[0] > 0.9999){
+          phip[0] = phi1[0];
+          accept[0] = 0.0;
+     }
      else{    
      tr1 = (a-1.0)*log(phi1[0])-b*phi1[0]-0.5*rT1*log(det1[0])- u; 
      tr2 = (a-1.0)*log(phi2[0])-b*phi2[0]-0.5*rT1*log(det2[0])- v; 
-     ratio[0] = exp(tr2 + exp(tr2) - tr1 - exp(tr1));
+     ratio[0] = exp(tr2 - tr1 + log(phi2[0]) - log(phi1[0]));
+//     ratio[0] = exp(tr2 + exp(tr2) - tr1 - exp(tr1));
      ratio_fnc(ratio, constant, U);
      if(U[0] < ratio[0]){
           phip[0] = phi2[0];
@@ -1760,6 +1769,8 @@ void phi_gp_MH_sptp(double *Qeta1, double *Qeta2, double *det1, double *det2,
      
      return;
 }     
+*/
+
 
 // Discrete sampling for phi
 void phi_gp_DIS(int *cov, double *Qeta1, double *det1, double *phi1,  
@@ -1899,6 +1910,7 @@ void phidens_gp(double *phi, double *Qeta, double *det, int *n, int *r,
      return;
 }
 
+/*
 // Discrete sampling for phi
 // for sptp
 void phi_gp_DIS_sptp(int *cov, double *Qeta1, double *det1, double *phi1,  
@@ -2029,6 +2041,7 @@ void phidens_gp_sptp(double *phi, double *Qeta, double *det, int *n, int *r,
 
      return;
 }
+*/
 
 
 // Discrete sampling for nu
@@ -2187,6 +2200,7 @@ void nudens_gp(double *Qeta, double *det, int *n, int *r, int *T, int *rT,
 }
 
 
+/*
 // Discrete sampling for nu
 // for sp tp models
 void nu_gp_DIS_sptp(int *cov, double *Qeta1, double *det1, double *phi,  
@@ -2211,22 +2225,6 @@ void nu_gp_DIS_sptp(int *cov, double *Qeta1, double *det1, double *phi,
      nus[15]=0.80; nus[16]=0.85; nus[17]=0.90; nus[18]=0.95; nus[19]=1.0; 
      nus[20]=1.05; nus[21]=1.10; nus[22]=1.15; nus[23]=1.20; nus[24]=1.25; 
      nus[25]=1.30; nus[26]=1.35; nus[27]=1.40; nus[28]=1.45; nus[29]=1.50;      
-
-/*
-     nuk=20;
-     double *nus;
-     nus = (double *) malloc((size_t)((nuk)*sizeof(double)));             
-     nus[0]=0.05; nus[1]=0.10; nus[2]=0.15; nus[3]=0.20; nus[4]=0.25;  
-     nus[5]=0.30; nus[6]=0.35; nus[7]=0.40; nus[8]=0.45; nus[9]=0.50;  
-     nus[10]=0.55; nus[11]=0.60; nus[12]=0.65; nus[13]=0.70; nus[14]=0.75; 
-     nus[15]=0.80; nus[16]=0.85; nus[17]=0.90; nus[18]=0.95; nus[19]=1.0; 
-
-     nuk=10;
-     double *nus;
-     nus = (double *) malloc((size_t)((nuk)*sizeof(double)));             
-     nus[0]=0.10; nus[1]=0.20; nus[2]=0.30; nus[3]=0.40; nus[4]=0.50;  
-     nus[5]=0.60; nus[6]=0.70; nus[7]=0.80; nus[8]=0.90; nus[9]=1.0;  
-*/          
 
      double *nutmp, *pden, *Qeta, *det, *out;
      nutmp = (double *) malloc((size_t)((col)*sizeof(double)));             
@@ -2335,12 +2333,11 @@ void nudens_gp_sptp(double *Qeta, double *det, int *n, int *r, int *T, int *rT,
      return;
 }
 
+*/
 
 ////////////////////// THE END //////////////////////////
 
 /*
-
-
 
 void sig_e_gp2 (int *N, double *shape, double *prior_b, double *o, double *z,
      int *constant, double *sig2eps)

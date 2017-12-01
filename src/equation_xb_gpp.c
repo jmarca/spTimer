@@ -86,12 +86,9 @@ void JOINT_onephi_gpp(int *cov, int *spdecay, double *flag, int *n, int *m,
      if(phi[0] <= 0){
         phi[0] = pow(1,-320);
      }      
-     //tmp[0] = -log(phi[0]); 
-     //mvrnormal(constant, tmp, tau, constant, phi2);
-     //phi2[0]= exp(-phi2[0]);
-     tmp[0] = log(phi[0]); 
+     tmp[0] = -log(phi[0]); 
      mvrnormal(constant, tmp, tau, constant, phi2);
-     phi2[0]= exp(phi2[0]);
+     phi2[0]= exp(-phi2[0]);
      covFormat2(cov, m, phi2, nup, dm, sig2eta, det2, Qeta2);
      phi_gpp_MH2(Qeta, Qeta2, det, det2, phi, phi2, m, r, T, rT, 
      prior_a, prior_b, rho, mu_l, w0p, wp, constant, accept, phip);
@@ -226,9 +223,9 @@ void JOINT_onephi_sp_gpp(int *intercept, int *cov, int *spdecay, double *flag,
      if(phi[0] <= 0){
         phi[0] = pow(1,-320);
      }      
-     tmp[0] = log(phi[0]); 
+     tmp[0] = -log(phi[0]); 
      mvrnormal(constant, tmp, tau, constant, phi2);
-     phi2[0]= exp(phi2[0]);
+     phi2[0]= exp(-phi2[0]);
      covFormat2(cov, m, phi2, nup, dm, sig2eta, det2, Qeta2);
      phi_gpp_MH2(Qeta, Qeta2, det, det2, phi, phi2, m, r, T, rT, 
      prior_a, prior_b, rho, mu_l, w0p, wp, constant, accept, phip);
@@ -1904,10 +1901,10 @@ void phi_gpp_MH(int *cov, double *phi2, double *nu, double *dm, double *dnm,
           phip[0] = phi1[0];
           accept[0] = 0.0;
      }
-     //else if(phi2[0] > 0.9999){
-     //     phip[0] = phi1[0];
-     //     accept[0] = 0.0;
-     //}
+     else if(phi2[0] > 0.9999){
+          phip[0] = phi1[0];
+          accept[0] = 0.0;
+     }
      else{
 // with Gamma prior    
      tr1 = (a-1.0)*log(phi1[0])-b*phi1[0]-0.5*rT1*log(det1[0])- u;      

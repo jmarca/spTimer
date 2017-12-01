@@ -86,9 +86,9 @@ void JOINT_ar(int *n, int *T, int *r, int *rT, int *p, int *N,
       if(phi[0] <= 0){
         phi[0] = pow(1,-320);
       }      
-      tmp[0] = log(phi[0]); 
+      tmp[0] = -log(phi[0]); 
       mvrnormal(constant, tmp, tau, constant, phi2);
-      phi2[0]= exp(phi2[0]);
+      phi2[0]= exp(-phi2[0]);
       //phi2[0]= exp(-phi2[0]-exp(-phi2[0]));      
 
       covFormat2(cov, n, phi2, nup, d, sig_eta, det2, Qeta2);

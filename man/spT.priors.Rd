@@ -21,7 +21,7 @@ If no prior information are given (assigned as NULL), then it use flat prior val
 \code{\link{spT.Gibbs}, \link{predict.spT}, \link{spT.initials}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ## 
 
 priors<-spT.priors(model="GPP",inv.var.prior=Gamm(2,1),
@@ -29,6 +29,6 @@ priors<-spT.priors(model="GPP",inv.var.prior=Gamm(2,1),
 priors
 
 ##
-}
+%}
 }
 \keyword{spT}

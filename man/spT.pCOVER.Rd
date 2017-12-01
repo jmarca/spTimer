@@ -17,7 +17,7 @@ spT.pCOVER(z=NULL,zup=NULL,zlow=NULL,zsample=NULL,level=95)
 \code{\link{spT.validation}}.
 }
 \examples{
-\dontrun{
+%\dontrun{
 ##
 
 # Create `x': the true values.
@@ -42,6 +42,6 @@ spT.pCOVER(z=x, zsample=y)
 spT.pCOVER(z=x, zsample=y, level=50)
 
 ##  
-}
+%}
 }
 \keyword{utility}

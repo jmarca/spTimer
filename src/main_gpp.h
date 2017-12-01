@@ -23,6 +23,7 @@ void GIBBS_sumpred_gpp(int *aggtype, int *cov, int *spdecay, double *flag,
 
 void GIBBS_zfitsum_onephi_gpp(int *cov, int *spdecay, double *flag, int *its, int *burnin,
      int *n, int *m, int *T, int *r, int *rT, int *p, int *N, int *report,
+	 int *ft,
      double *shape_e, double *shape_eta, double *shape_l,  
      double *phi_a, double *phi_b,
      double *prior_a, double *prior_b, double *mu_beta, double *delta2_beta,
@@ -35,7 +36,6 @@ void GIBBS_zfitsum_onephi_gpp(int *cov, int *spdecay, double *flag, int *its, in
      double *sig2ef, double *sig2etaf, double *betaf, double *rhof, 
      double *mu_lf, double *sig2lf, double *w0f, double *wf, 
      double *gof, double *penalty, double *z_mean_sd);
-
 
 void GIBBSsp_zfitsum_onephi_gpp(int *intercept, int *cov, int *spdecay, 
      double *flag, int *its, int *burnin, int *n, int *m, int *T, int *r, 
